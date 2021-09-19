@@ -1,0 +1,25 @@
+{
+  "name": "killawat",
+  "version": "0.0.6",
+  "description": "Killa' WAT is a WebAssembly Text Macro Assembler",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "kwc": "bin/kwc"
+  },
+  "keywords": [
+    "WebAssembly",
+    "WebAssembly Text",
+    "WAT",
+    "Wasm",
+    "Wasm Text"
+  ],
+  "homepage": "https://killawat.com",
+  "author": "Rick Battagline <rick@battagline.com>",
+  "license": "MIT",
+  "dependencies": {
+    "binaryen": "^101.0.0"
+  }
+}

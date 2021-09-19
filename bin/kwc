@@ -1,0 +1,80 @@
+#!/usr/bin/env node
+
+const RED = '\x1b[31m%s';
+const GREEN = '\x1b[32m%s';
+const YELLOW = '\x1b[33m'; //%s';
+const BLUE = '\x1b[34m%s';
+const MAGENTA = '\x1b[35m%s';
+const CYAN = '\x1b[36m' //%s';
+const WHITE = '\x1b[37m'; //%s';
+const GRAY = '\x1b[90m%s';
+const BRIGHT_RED = '\x1b[91m%s';
+const BRIGHT_YELLOW = '\x1b[92m%s';
+const BRIGHT_GREEN = '\x1b[93m%s';
+const BRIGHT_BLUE = '\x1b[94m%s';
+const BRIGHT_MAGENTA = '\x1b[95m%s';
+const BRIGHT_CYAN = '\x1b[96m%s';
+const BRIGHT_WHITE = '\x1b[97m%s';
+
+const args = process.argv;
+
+({ compile, log_support } = require('../src/killawat'));
+
+if (args.length <= 2) {
+  console.log(`
+    Usage:
+    ${YELLOW}kwc file.wat${WHITE}
+    Creates file.wasm given a WebAssembly Text file
+  
+    ${YELLOW}kwc file.wat -o other.wasm${WHITE}
+    Creates other.wasm WebAssembly file from file.wat.
+      The -o flag allows you to specify an output file.
+  
+    Flags:
+    ${YELLOW}-o${WHITE} is followed by an output file name);
+
+    ${YELLOW}-O1${WHITE} minimal performance optmization
+    ${YELLOW}-O2${WHITE} moderate performance optmization
+    ${YELLOW}-O3${WHITE} maximum performance optmization
+
+    ${YELLOW}-Os${WHITE} minimal size optmization
+    ${YELLOW}-Oz${WHITE} maximum size optmization
+
+    ${YELLOW}--exceptions${WHITE} exception handling (proposal)
+    ${YELLOW}--mutable-globals${WHITE} import/export mutable globals (proposal)
+    ${YELLOW}--sat-float-to-int${WHITE} non-trapping float-to-int conversion (proposal)
+    ${YELLOW}--sign-extension${WHITE} sign-extension operators (proposal)
+    ${YELLOW}--sign-extension${WHITE} sign-extension operators (proposal)
+    ${YELLOW}--simd${WHITE} single instruction multiple data (proposal)
+    ${YELLOW}--threads${WHITE} threads (proposal)
+    ${YELLOW}--multi-value${WHITE} functions may return more than one value (proposal)
+    ${YELLOW}--tail-call${WHITE} tail call optimization (proposal)
+    ${YELLOW}--bulk-memory${WHITE} bulk memory copy and memory move (proposal)
+    ${YELLOW}--reference-types${WHITE} improved interoperablility with host env (proposal)
+    ${YELLOW}--annotations${WHITE} custom annotations (proposal)
+    ${YELLOW}--gc${WHITE} garbage collection (proposal)
+    `);
+  return;
+}
+
+console.log(`${CYAN}
+========================================================
+  KILLA' WAT
+========================================================
+${WHITE}`);
+
+let file = args[2];
+if (file.endsWith('.wasm')) {
+  log_error('kwc passed WASM file!!!');
+  console.log(`
+    USAGE:
+
+      c file.wat
+    `);
+  return;
+}
+
+compile(args[2])
+
+log_support();
+
