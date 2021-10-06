@@ -1,6 +1,6 @@
 {
   "name": "killawat",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Killa' WAT is a WebAssembly Text Macro Assembler",
   "main": "index.js",
   "scripts": {
