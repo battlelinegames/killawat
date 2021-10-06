@@ -1,0 +1,28 @@
+killawat
+  fs
+  utils.js
+  tokenizer.js
+  functionTable.js
+  symbolTable.js
+  parseAST.js
+
+functionTable
+  utils.js
+  symbolTable.js
+  (parseAST.js) -> IRTree
+
+parseAST
+  (functionTable.js) -> FuncTableEntry
+  symbolTable.js
+  utils.js
+
+symbolTable
+  utils.js
+
+tokenizer
+  moo
+
+utils
+  binaryen
+
+

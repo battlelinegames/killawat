@@ -1,21 +1,5 @@
 #!/usr/bin/env node
 
-const RED = '\x1b[31m%s';
-const GREEN = '\x1b[32m%s';
-const YELLOW = '\x1b[33m'; //%s';
-const BLUE = '\x1b[34m%s';
-const MAGENTA = '\x1b[35m%s';
-const CYAN = '\x1b[36m' //%s';
-const WHITE = '\x1b[37m'; //%s';
-const GRAY = '\x1b[90m%s';
-const BRIGHT_RED = '\x1b[91m%s';
-const BRIGHT_YELLOW = '\x1b[92m%s';
-const BRIGHT_GREEN = '\x1b[93m%s';
-const BRIGHT_BLUE = '\x1b[94m%s';
-const BRIGHT_MAGENTA = '\x1b[95m%s';
-const BRIGHT_CYAN = '\x1b[96m%s';
-const BRIGHT_WHITE = '\x1b[97m%s';
-
 const args = process.argv;
 
 ({ compile, log_support } = require('../src/killawat'));
@@ -57,11 +41,11 @@ if (args.length <= 2) {
   return;
 }
 
-console.log(`${CYAN}
+console.log(`
 ========================================================
   KILLA' WAT
 ========================================================
-${WHITE}`);
+`);
 
 let file = args[2];
 if (file.endsWith('.wasm')) {
@@ -74,7 +58,29 @@ if (file.endsWith('.wasm')) {
   return;
 }
 
-compile(args[2])
+let flags = {
+  print_function_table: false,
+  print_symbol_table: false,
+  print_tree: false,
+  tokens: false
+}
+
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === '--print-ft') {
+    flags.print_function_table = true;
+  }
+  else if (args[i] === '--print-st') {
+    flags.print_symbol_table = true;
+  }
+  else if (args[i] === '--print-tree') {
+    flags.print_tree = true;
+  }
+  else if (args[i] === '--tokens') {
+    flags.tokens = true;
+  }
+}
+
+compile(args[2], flags)
 
 log_support();
 

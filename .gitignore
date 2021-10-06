@@ -1,2 +1,7 @@
+**/node_modules
+**/notes
+**/backup
 gitrun.sh
-./node_modules/**
+.npmignore
+tokens.txt
+temp.txt

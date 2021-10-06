@@ -1,31 +1,12 @@
-const binaryen = require("binaryen");
-var WasmModule = new binaryen.Module();
-module.exports.binaryen = binaryen;
-module.exports.WasmModule = WasmModule;
-
-const { tokenize } = require("./tokenizer.js");
-const { funcToken, functionTable, buildFuncExpression,
-  buildBlockTokenStack, buildBlockExpressions } = require('./function.js');
+const { TokenArray, YELLOW, RED, CYAN, BRIGHT_GREEN, BRIGHT_YELLOW, BRIGHT_MAGENTA, WasmModule, binaryen } = require('./shared.js')
 const fs = require('fs');
+const { tokenize } = require("./tokenizer.js");
+const { genParseTree, parseTree } = require('./parse.js');
+//const { FuncTableEntry } = require("./functionTable.js");
+//const { SymbolTableEntry } = require("./symbolTable.js");
+//const { Tree, IRBlock, createIRBlocks } = require("./parseAST.js");
+//console.log(`killawatg.js IRBlock: ${IRBlock}`)
 
-
-const RED = '\x1b[31m%s';
-const CYAN = '\x1b[36m%s';
-const BRIGHT_MAGENTA = '\x1b[95m%s';
-const BRIGHT_YELLOW = '\x1b[93m%s';
-const BRIGHT_GREEN = '\x1b[92m%s';
-/*
-const GREEN = '\x1b[32m%s';
-const YELLOW = '\x1b[33m%s';
-const BLUE = '\x1b[34m%s';
-const MAGENTA = '\x1b[35m%s';
-const WHITE = '\x1b[37m%s';
-const GRAY = '\x1b[90m%s';
-const BRIGHT_RED = '\x1b[91m%s';
-const BRIGHT_BLUE = '\x1b[94m%s';
-const BRIGHT_CYAN = '\x1b[96m%s';
-const BRIGHT_WHITE = '\x1b[97m%s';
-*/
 function log_error(error_string) {
   console.log(RED, `
     ===================================================================================
@@ -47,43 +28,52 @@ function log_support() {
 
 }
 
-var function_expressions = [];
-
-function compile(file_name) {
-  console.log(`compile ${file_name}`)
+/*
+let flags = {
+  print_function_table: false,
+  print_symbol_table: false,
+  print_tree: false,
+  tokens: false
+}
+*/
+function compile(file_name, flags) {
+  console.log(BRIGHT_YELLOW, `compile ${file_name}`)
   var bytes = fs.readFileSync(file_name);
   var code = bytes.toString();
-  var token_array = tokenize(code);
-  // console.log(token_array);
+  tokenize(code);
 
-  for (let i = 0; i < token_array.length; i++) {
-    let token = token_array[i];
-    // BUILD GLOBAL TABLE HERE
-    if (token.type === 'keyword' && token.value === 'func') {
-      funcToken(token_array, i);
-    }
+  if (flags.tokens === true) {
+    console.log(BRIGHT_MAGENTA, JSON.stringify(TokenArray, null, 2));
   }
 
-  for (let i = 0; i < functionTable.length; i++) {
-    buildBlockTokenStack(functionTable[i]);
-    //console.log('**buildBlockTokenStack');
-    //console.log(functionTable[i]);
-    buildBlockExpressions(functionTable[i]);
-    //console.log('***buildBlockExpressions');
-    //console.log(functionTable[i]);
-    buildFuncExpression(functionTable[i]);
-    //console.log('****buildFuncExpression');
-    //console.log(functionTable[i]);
+  genParseTree();
+
+  if (flags.print_tree === true) {
+    console.log(YELLOW, JSON.stringify(parseTree, null, 2));
+  }
+  /*
+  var tree = new Tree(token_array);
+
+  tree.buildTables()
+  createIRBlocks();
+
+  if (flags.print_tree === true) {
+    tree.log();
   }
 
-  if (!WasmModule.validate()) {
-    throw new Error("validation error");
+  if (flags.print_function_table === true) {
+    FuncTableEntry.log();
   }
 
-  // something is wrong with emitText()
-  //console.log(WasmModule.emitText());
+  if (flags.print_symbol_table === true) {
+    SymbolTableEntry.logGlobalTable();
+  }
+  */
+
   let file_out = file_name.replace('.wat', '.wasm');
-  console.log(BRIGHT_GREEN, `Output File: ${file_out}`);
+  console.log(BRIGHT_GREEN, `
+  Output File: ${file_out}`);
   fs.writeFileSync(file_out, WasmModule.emitBinary());
 }
+
 module.exports = { compile, log_error, log_support };
