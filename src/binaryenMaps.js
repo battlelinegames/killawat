@@ -31,3 +31,6 @@ binaryenBinaryMap.set('i32.mul', WasmModule.i32.mul);
 binaryenBinaryMap.set('i32.and', WasmModule.i32.and);
 
 module.exports.binaryenBinaryMap = binaryenBinaryMap;
+
+binaryenUnaryMap.set('local.set', WasmModule.local.set);
+binaryenUnaryMap.set('global.set', WasmModule.global.set);

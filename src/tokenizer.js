@@ -171,10 +171,47 @@ const lexer = moo.compile({
       }
     }
   },
+  global_set: {
+    // for some reason global.set requires a name and local.set requires an index.
+    match: /global\.set|set_global/,
+    value: s => {
+      // i could check the first 3 characters for btype here
+      // the type the function consumes may require a lookup
+      return {
+        level: level,
+        index: index++,
+        result: binaryen.none,
+        btype: binaryen.none,
+        consumes: [],
+        value: s,
+      }
+    }
+  },
+  local_set: {
+    // for some reason global.set requires a name and local.set requires an index.
+    match: /local\.set|set_local/,
+    value: s => {
+      // i could check the first 3 characters for btype here
+      // the type the function consumes may require a lookup
+      return {
+        level: level,
+        index: index++,
+        result: binaryen.none,
+        btype: binaryen.none,
+        consumes: [],
+        value: s,
+      }
+    }
+  },
   global_level: {
     match: /module|func|type|import|export|table|funcref|elem|global|memory/,
     value: s => {
+      let type = 'global_level';
+      if (level > 2) {
+        type = 'sig';
+      }
       return {
+        type: type,
         level: level,
         index: index++,
         result: null,
@@ -183,7 +220,7 @@ const lexer = moo.compile({
     }
   },
   sig: {
-    match: /param|result|local/,
+    match: /param|result|local|mut/,
     value: s => {
       return {
         level: level,

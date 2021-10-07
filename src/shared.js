@@ -47,6 +47,9 @@ module.exports.functionMap = functionMap;
 
 
 // SYMBOL TABLE STUFF
+let globalSymbolMap = new Map();
+module.exports.globalSymbolMap = globalSymbolMap;
+
 let globalSymbolTable = [];
 module.exports.globalSymbolTable = globalSymbolTable;
 let symbolTable = [[]];

@@ -1,11 +1,10 @@
-const { TokenArray, YELLOW, RED, CYAN, BRIGHT_GREEN, BRIGHT_YELLOW, BRIGHT_MAGENTA, WasmModule, binaryen } = require('./shared.js')
+const { TokenArray,
+  YELLOW, RED, CYAN, BRIGHT_GREEN, BRIGHT_BLUE,
+  BRIGHT_YELLOW, BRIGHT_MAGENTA, BRIGHT_RED,
+  WasmModule, binaryen, globalSymbolTable, functionTable } = require('./shared.js')
 const fs = require('fs');
 const { tokenize } = require("./tokenizer.js");
 const { genParseTree, parseTree } = require('./parse.js');
-//const { FuncTableEntry } = require("./functionTable.js");
-//const { SymbolTableEntry } = require("./symbolTable.js");
-//const { Tree, IRBlock, createIRBlocks } = require("./parseAST.js");
-//console.log(`killawatg.js IRBlock: ${IRBlock}`)
 
 function log_error(error_string) {
   console.log(RED, `
@@ -51,24 +50,14 @@ function compile(file_name, flags) {
   if (flags.print_tree === true) {
     console.log(YELLOW, JSON.stringify(parseTree, null, 2));
   }
-  /*
-  var tree = new Tree(token_array);
 
-  tree.buildTables()
-  createIRBlocks();
-
-  if (flags.print_tree === true) {
-    tree.log();
+  if (flags.print_symbol_table === true) {
+    console.log(BRIGHT_BLUE, JSON.stringify(globalSymbolTable, null, 2));
   }
 
   if (flags.print_function_table === true) {
-    FuncTableEntry.log();
+    console.log(BRIGHT_RED, JSON.stringify(functionTable, null, 2));
   }
-
-  if (flags.print_symbol_table === true) {
-    SymbolTableEntry.logGlobalTable();
-  }
-  */
 
   let file_out = file_name.replace('.wat', '.wasm');
   console.log(BRIGHT_GREEN, `

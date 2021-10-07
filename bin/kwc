@@ -69,7 +69,7 @@ for (let i = 0; i < args.length; i++) {
   if (args[i] === '--print-ft') {
     flags.print_function_table = true;
   }
-  else if (args[i] === '--print-st') {
+  else if (args[i] === '--print-globals') {
     flags.print_symbol_table = true;
   }
   else if (args[i] === '--print-tree') {

@@ -1,4 +1,4 @@
-const { WasmModule, binaryen, logError, TokenArray } = require('./shared.js')
+const { WasmModule, binaryen, logError, TokenArray, globalSymbolTable, globalSymbolMap, functionTable } = require('./shared.js')
 const { binaryenTerminalMap, binaryenUnaryMap, binaryenBinaryMap } = require('./binaryenMaps.js');
 // DO I WANT TO CALL THIS A BRANCH OR AN EXPRESSION
 // STARTING_TOKEN, KEYWORD, IDENTIFIER, TYPE
@@ -6,8 +6,6 @@ const { binaryenTerminalMap, binaryenUnaryMap, binaryenBinaryMap } = require('./
 var index;
 var parseTree = {};
 module.exports.parseTree = parseTree;
-var funcTable = [];
-module.exports.funcTable = funcTable;
 
 function lookAheadRP(start_index, level) {
   for (let i = start_index; i < TokenArray.length; i++) {
@@ -51,15 +49,90 @@ function binaryenExpFromBinary(binary_index, param1_token, param2_token) {
   return token;
 }
 
+function binaryenFromLocalSet(set_index, param_token, func_branch) {
+  let token = TokenArray[set_index];
+  let nextToken = TokenArray[set_index + 1];
+  let text = token.text;
+  let local = null;
+
+  if (param_token == null) {
+    logError(`${text} expression requires one parameter`, token);
+    return;
+  }
+
+  if (nextToken.type === 'name') {
+    local = func_branch.localMap.get(nextToken.text);
+    token.attributes.push(nextToken);
+  }
+  else if (nextToken.type === 'int_literal') {
+    let index = nextToken.value;
+    if (index < func_branch.params.length) {
+      local = func_branch.params[index];
+    }
+    else {
+      local = func_branch.locals[index - func_branch.params.length];
+    }
+    token.attributes.push(nextToken);
+
+  }
+  else {
+    logError(`${text} must be followed by a name or an integer literal`, nextToken);
+    return;
+  }
+
+  token.children.push(param_token);
+  token.expression = WasmModule.local.set(local.varIndex, param_token.expression);
+  console.log('===================SET LOCAL=====================')
+  console.log('token:');
+  console.log(token);
+  console.log('param_token:');
+  console.log(param_token);
+  console.log('==================================================')
+  //  token.expression = bf(param_token.expression);
+  return token;
+
+}
+
+function binaryenFromGlobalSet(set_index, param_token, func_branch) {
+  let token = TokenArray[set_index];
+  let nextToken = TokenArray[set_index + 1];
+  let text = token.text;
+  let global = null;
+
+  if (param_token == null) {
+    logError(`${text} expression requires one parameter`, token);
+    return;
+  }
+
+  if (nextToken.type === 'name') {
+    global = globalSymbolMap.get(nextToken.text);
+    token.attributes.push(nextToken);
+  }
+  else if (nextToken.type === 'int_literal') {
+    let index = nextToken.value;
+    global = globalSymbolTable[index];
+    token.attributes.push(nextToken);
+
+  }
+  else {
+    logError(`${text} must be followed by a name or an integer literal`, nextToken);
+    return;
+  }
+
+  token.children.push(param_token);
+  token.expression = WasmModule.global.set(local.varIndex, param_token.expression);
+  console.log('===================SET LOCAL=====================')
+  console.log(token);
+  console.log('==================================================')
+  //  token.expression = bf(param_token.expression);
+  return token;
+
+}
+
 function binaryenExpFromUnary(unary_index, param_token) {
   let token = TokenArray[unary_index];
   let text = token.text;
   let bf = binaryenUnaryMap.get(text);
-  console.log(`
-  text: ${text}
-  `);
-  console.log(token);
-  console.log(binaryenUnaryMap);
 
   if (param_token == null) {
     logError(`${text} expression requires one parameter`, token);
@@ -106,9 +179,27 @@ function binaryenExpFromTerminal(terminal_index, func_branch) {
     }
   }
   else if (text === 'global.get') {
-    // IMPLEMENT THIS!
-    logError(`global.get has not been implemented yet.  Please tell @battagline`, token);
-    return;
+    let nextToken = TokenArray[terminal_index + 1];
+    let global = null;
+    if (nextToken.type === 'name') {
+      global = globalSymbolMap.get(nextToken.text);
+      token.attributes.push(nextToken);
+
+      token.result = global.btype;
+      token.expression = bf(global.name, global.btype);
+    }
+    else if (nextToken.type === 'int_literal') {
+      let index = nextToken.value;
+      global = globalSymbolTable[index];
+      token.attributes.push(nextToken);
+
+      token.result = global.btype;
+      token.expression = bf(global.name, global.btype);
+    }
+    else {
+      logError(`${text} must be followed by a name or an integer literal`, nextToken);
+      return;
+    }
   }
   else if (textEnd === 'const') {
     let nextToken = TokenArray[terminal_index + 1];
@@ -139,6 +230,14 @@ function BuildExpressionBranch(index, func_branch) {
     return binaryenExpFromBinary(index,
       BuildExpressionBranch(param1_i, func_branch),
       BuildExpressionBranch(param2_i, func_branch));
+  }
+  else if (token.type === 'local_set') {
+    let param_i = lookAheadLP(index) + 1;
+    return binaryenFromLocalSet(index, BuildExpressionBranch(param_i, func_branch), func_branch);
+  }
+  else if (token.type === 'global_set') {
+    let param_i = lookAheadLP(index) + 1;
+    return binaryenFromGlobalSet(index, BuildExpressionBranch(param_i, func_branch), func_branch);
   }
   else {
     logError(`${token.text} is not an expression branch`, token);
@@ -176,6 +275,51 @@ function createFunctionBlock(start_index, func_branch) {
         let p1 = funcStack.pop();
         token = binaryenExpFromBinary(i, p1, p2)
       }
+      else if (token.type === 'local_set') {
+        parentToken = true;
+        let nextToken = TokenArray[++i];
+        let local = null;
+        if (nextToken.type === 'name') {
+          local = func_branch.localMap.get(nextToken.text);
+        }
+        else if (nextToken.type === 'int_literal') {
+          let index = nextToken.value;
+          if (index < func_branch.params.length) {
+            local = func_branch.params[index];
+          }
+          else {
+            local = func_branch.locals[index - func_branch.params.length];
+          }
+        }
+        else {
+          logError(`${text} must be followed by a name or an integer literal`, nextToken);
+          return;
+        }
+        token.attributes.push(nextToken);
+        let param_token = funcStack.pop();
+        token.expression = WasmModule.local.set(local.varIndex, param_token.expression);
+
+      }
+      else if (token.type === 'global_set') {
+        parentToken = true;
+        let nextToken = TokenArray[++i];
+        let global = null;
+        if (nextToken.type === 'name') {
+          global = globalSymbolMap.get(nextToken.text);
+        }
+        else if (nextToken.type === 'int_literal') {
+          let index = nextToken.value;
+          global = globalSymbolTable[index];
+        }
+        else {
+          logError(`${text} must be followed by a name or an integer literal`, nextToken);
+          return;
+        }
+        token.attributes.push(nextToken);
+        let param_token = funcStack.pop();
+        token.expression = WasmModule.global.set(global.name, param_token.expression);
+        //func_branch.block.push(token);
+      }
     }
 
     if (parentToken) {
@@ -198,44 +342,86 @@ function createFunctionBlock(start_index, func_branch) {
     return;
   }
   else {
-    func_branch.block.push(WasmModule.return(funcStack.pop().expression));
+    //    func_branch.block.push(WasmModule.return(funcStack.pop()));
+    func_branch.block.push(funcStack.pop());
   }
 
-  console.log(`
-  ADD FUNCTION:
-    NAME: ${func_branch.name}
-    PARAMS: ${func_branch.params.map(param => param.btype)}
-    RESULT: ${func_branch.result}
-    BLOCK: ${func_branch.block.map(tok => tok.expression)}
-  `);
-
   let create_type = binaryen.createType(func_branch.params.map(param => param.btype));
-  console.log(`create_type=${create_type}`);
-  /*
-    let funcref = WasmModule.addFunction(func_branch.name,
-      create_type,
-      func_branch.result,
-      WasmModule.block(null, func_branch.block.map(tok => tok.expression)));
-  */
+  let block = func_branch.block.map(tok => tok.expression);
 
   let funcref = WasmModule.addFunction(func_branch.name,
     create_type,
     func_branch.result,
     func_branch.locals.map(local => local.btype),
-    WasmModule.block(null, func_branch.block)
+    WasmModule.block(null, block)
   );
 
-  console.log(funcref);
+}
 
+function genGlobal(currentToken) {
+  let globalBranch = currentToken;
+  globalBranch.tokenStartIndex = index;
+  globalBranch.tokenEndIndex = lookAheadRP(globalBranch.tokenStartIndex, currentToken.level);
+  globalBranch.name = `$global_${globalSymbolTable.length}`;
+  globalBranch.exportName = null;
+  globalBranch.globalId = globalSymbolTable.length;
+  globalBranch.mutable = false;
+  globalBranch.btype = binaryen.i32;
+  globalBranch.initToken = null;
+  globalBranch.ref = null;
+
+
+  //let searchState = 0;
+  //let rp = 0;
+  for (let i = globalBranch.tokenStartIndex; i < globalBranch.tokenEndIndex; i++) {
+    if (TokenArray[i].type === 'name') {
+      globalBranch.name = TokenArray[i].value;
+    }
+    else if (TokenArray[i].text === 'export') {
+      if (TokenArray[++i].type === 'string_literal') {
+        globalBranch.exportName = TokenArray[i].value;
+      }
+      else {
+        logError('export keyword must be followed by a string literal', TokenArray[i]);
+        return;
+      }
+    }
+    else if (TokenArray[i].type === 'type') {
+      globalBranch.btype = TokenArray[i].btype;
+    }
+    else if (TokenArray[i].text === 'mut') {
+      globalBranch.mutable = true;
+      if (TokenArray[++i].type === 'type') {
+        globalBranch.btype = TokenArray[i].btype;
+      }
+      else {
+        logError('mut keyword must be followed by a type', TokenArray[i]);
+        return;
+      }
+    }
+    else if (TokenArray[i].text.slice(TokenArray[i].text.length - 5) === 'const') {
+      globalBranch.initToken = binaryenExpFromTerminal(i);
+    }
+
+  }
+  globalSymbolTable.push(globalBranch);
+  globalSymbolMap.set(globalBranch.name, globalBranch);
+  parseTree.module.children.push(globalBranch);
+
+  WasmModule.addGlobal(globalBranch.name, globalBranch.btype, globalBranch.mutable, globalBranch.initToken.expression);
+
+  if (globalBranch.exportName != null) {
+    WasmModule.addGlobalExport(globalBranch.name, globalBranch.exportName);
+  }
 }
 
 function genFunc(currentToken) {
   let funcBranch = currentToken;
   funcBranch.tokenStartIndex = index;
   funcBranch.tokenEndIndex = lookAheadRP(funcBranch.tokenStartIndex, currentToken.level);
-  funcBranch.name = `$func_${funcTable.length}`;
+  funcBranch.name = `$func_${functionTable.length}`;
   funcBranch.exportName = null;
-  funcBranch.funcId = funcTable.length;
+  funcBranch.funcId = functionTable.length;
   funcBranch.params = [];
   funcBranch.result = binaryen.none;
   funcBranch.locals = [];
@@ -388,7 +574,7 @@ function genFunc(currentToken) {
       searchState = 5;
     }
   }
-  funcTable.push(funcBranch);
+  functionTable.push(funcBranch);
   parseTree.module.children.push(funcBranch);
 }
 
@@ -417,6 +603,8 @@ function genParseTree() {
           genFunc(currentToken);
           break;
         case 'global':
+          genGlobal(currentToken);
+          break;
         case 'type':
         case 'import':
         case 'export':

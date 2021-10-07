@@ -1,0 +1,201 @@
+[
+  {
+    "type": "global_level",
+    "value": "func",
+    "text": "func",
+    "offset": 146,
+    "lineBreaks": 0,
+    "line": 5,
+    "col": 6,
+    "children": [],
+    "attributes": [],
+    "level": 2,
+    "index": 44,
+    "result": 2,
+    "tokenStartIndex": 44,
+    "tokenEndIndex": 112,
+    "name": "$addtest",
+    "exportName": "AddInt",
+    "funcId": 0,
+    "params": [
+      {
+        "type": "sig",
+        "value": "param",
+        "text": "param",
+        "offset": 184,
+        "lineBreaks": 0,
+        "line": 6,
+        "col": 6,
+        "children": [],
+        "attributes": [
+          {
+            "type": "name",
+            "value": "$value_1",
+            "text": "$value_1",
+            "offset": 190,
+            "lineBreaks": 0,
+            "line": 6,
+            "col": 12,
+            "children": [],
+            "attributes": [],
+            "level": 3,
+            "index": 53,
+            "result": null
+          },
+          {
+            "type": "type",
+            "value": "i32",
+            "text": "i32",
+            "offset": 199,
+            "lineBreaks": 0,
+            "line": 6,
+            "col": 21,
+            "children": [],
+            "attributes": [],
+            "level": 3,
+            "index": 54,
+            "btype": 2,
+            "result": null
+          }
+        ],
+        "level": 3,
+        "index": 52,
+        "result": 2,
+        "name": "$value_1",
+        "btype": 2,
+        "varIndex": 0
+      },
+      {
+        "type": "sig",
+        "value": "param",
+        "text": "param",
+        "offset": 205,
+        "lineBreaks": 0,
+        "line": 6,
+        "col": 27,
+        "children": [],
+        "attributes": [
+          {
+            "type": "name",
+            "value": "$value_2",
+            "text": "$value_2",
+            "offset": 211,
+            "lineBreaks": 0,
+            "line": 6,
+            "col": 33,
+            "children": [],
+            "attributes": [],
+            "level": 3,
+            "index": 58,
+            "result": null
+          },
+          {
+            "type": "type",
+            "value": "i32",
+            "text": "i32",
+            "offset": 220,
+            "lineBreaks": 0,
+            "line": 6,
+            "col": 42,
+            "children": [],
+            "attributes": [],
+            "level": 3,
+            "index": 59,
+            "btype": 2,
+            "result": null
+          }
+        ],
+        "level": 3,
+        "index": 57,
+        "result": 2,
+        "name": "$value_2",
+        "btype": 2,
+        "varIndex": 1
+      }
+    ],
+    "locals": [
+      {
+        "type": "sig",
+        "value": "local",
+        "text": "local",
+        "offset": 249,
+        "lineBreaks": 0,
+        "line": 8,
+        "col": 6,
+        "children": [],
+        "attributes": [],
+        "level": 3,
+        "index": 68,
+        "result": null,
+        "name": "$c",
+        "btype": 2,
+        "varIndex": 2
+      }
+    ],
+    "localMap": {},
+    "block": [
+      {
+        "type": "local_set",
+        "value": "local.set",
+        "text": "local.set",
+        "offset": 462,
+        "lineBreaks": 0,
+        "line": 26,
+        "col": 7,
+        "children": [],
+        "attributes": [
+          {
+            "type": "name",
+            "value": "$c",
+            "text": "$c",
+            "offset": 472,
+            "lineBreaks": 0,
+            "line": 26,
+            "col": 17,
+            "children": [],
+            "attributes": [],
+            "level": 2,
+            "index": 96,
+            "result": null
+          }
+        ],
+        "level": 2,
+        "index": 95,
+        "result": 0,
+        "btype": 0,
+        "consumes": [],
+        "expression": 5449044
+      },
+      {
+        "type": "terminal",
+        "value": "local.get",
+        "text": "local.get",
+        "offset": 482,
+        "lineBreaks": 0,
+        "line": 27,
+        "col": 7,
+        "children": [],
+        "attributes": [
+          {
+            "type": "name",
+            "value": "$c",
+            "text": "$c",
+            "offset": 492,
+            "lineBreaks": 0,
+            "line": 27,
+            "col": 17,
+            "children": [],
+            "attributes": [],
+            "level": 2,
+            "index": 99,
+            "result": null
+          }
+        ],
+        "level": 2,
+        "index": 98,
+        "result": 2,
+        "expression": 5449060
+      }
+    ]
+  }
+]
