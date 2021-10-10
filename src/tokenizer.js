@@ -1,4 +1,4 @@
-const { TokenArray } = require("./shared.js");
+const { TokenArray, funcSigTable, funcSigMap } = require("./shared.js");
 const binaryen = require("binaryen");
 const moo = require("moo");
 var level = 0;
@@ -230,6 +230,18 @@ const lexer = moo.compile({
       }
     }
   },
+  call: {
+    match: /call|call_indirect/,
+    value: s => {
+      return {
+        level: level,
+        index: index++,
+        result: null,
+        params: [],
+        value: s,
+      }
+    }
+  },
   control: {
     match: /block|if|else|end|then|loop|br_if|br|switch|return|select/,
     value: s => {
@@ -316,6 +328,18 @@ lexer.next = (next => () => {
   return tok;
 })(lexer.next);
 
+/*
+I MIGHT CREATE A STATE MACHINE HERE
+I COULD SUCK UP THE FUNCTION SIGNATURE AS I'M PASISNG THROUGH
+*/
+var funcSigState = 0;
+var tempFuncObj = {
+  name: "unknown",
+  result: binaryen.none,
+  params: [],
+  locals: []
+};
+
 module.exports.tokenize = function tokenize(code) {
   // multiline comments were throwing off moo.js.  I removed them here.
   let comment_array = code.match(/\(;(?:(\n)|[^\n])*?;\)/gm) || [];
@@ -327,12 +351,76 @@ module.exports.tokenize = function tokenize(code) {
 
   lexer.reset(code);
   let token = lexer.next();
+  const unknownState = 0xff;
+  const nameState = 1;
+  const paramState = 2;
+  const resultState = 3;
+  const localState = 4;
 
   // one token look ahead
   while (token != null) {
     token.children = [];
     token.attributes = [];
     let push_tok = Object.assign(token, token.value);
+
+    if (funcSigState > 0) {
+      if (funcSigState === nameState && push_tok.type === 'name') {
+        tempFuncObj.name = push_tok.text;
+        funcSigState = unknownState;
+      }
+      else if (funcSigState == unknownState && push_tok.text === 'param') {
+        funcSigState = paramState;
+      }
+      else if (funcSigState == unknownState && push_tok.text === 'result') {
+        funcSigState = resultState;
+      }
+      // I DON'T THINK I NEED TO TRACK THE LOCALS FOR THE SIGNATURE
+      // I MAY WANT TO CHANGE THIS PART
+      else if (funcSigState == unknownState && push_tok.text === 'local') {
+        funcSigState = localState;
+      }
+      else if (push_tok.type === 'rp' && push_tok.level > 2) {
+        funcSigState = unknownState;
+      }
+      else if (push_tok.type === 'type') {
+        if (funcSigState === paramState) {
+          tempFuncObj.params.push(push_tok.btype);
+        }
+        else if (funcSigState === resultState) {
+          tempFuncObj.result = push_tok.btype;
+        }
+        else if (funcSigState === localState) {
+          tempFuncObj.locals.push(push_tok.btype);
+        }
+      }
+    }
+
+    if (push_tok.text === 'func' && push_tok.level === 2 && funcSigState === 0) {
+      funcSigState = nameState;
+      tempFuncObj.name = `$func_${funcSigTable.length}`;
+    }
+    else if (push_tok.type === 'rp' && push_tok.level === 2 && funcSigState > 0) {
+
+      let push_obj = Object.assign(
+        {
+          name: tempFuncObj.name,
+          result: tempFuncObj.result,
+          params: tempFuncObj.params.map(x => x),
+          locals: tempFuncObj.locals.map(x => x)
+        });
+
+      funcSigTable.push(push_obj)
+      funcSigMap.set(push_obj.name, push_obj);
+
+      tempFuncObj.name = "unknown";
+      tempFuncObj.result = binaryen.none;
+
+      tempFuncObj.params = [];
+      tempFuncObj.locals = [];
+
+      funcSigState = 0;
+    }
+
     //delete push_tok.value;
     TokenArray.push(push_tok);
     token = lexer.next();

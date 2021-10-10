@@ -1,7 +1,7 @@
-const { TokenArray,
+const { TokenArray, funcSigTable,
   YELLOW, RED, CYAN, BRIGHT_GREEN, BRIGHT_BLUE,
   BRIGHT_YELLOW, BRIGHT_MAGENTA, BRIGHT_RED,
-  WasmModule, binaryen, globalSymbolTable, functionTable } = require('./shared.js')
+  WasmModule, binaryen, globalSymbolTable, functionTable, BLUE } = require('./shared.js')
 const fs = require('fs');
 const { tokenize } = require("./tokenizer.js");
 const { genParseTree, parseTree } = require('./parse.js');
@@ -42,21 +42,44 @@ function compile(file_name, flags) {
   tokenize(code);
 
   if (flags.tokens === true) {
-    console.log(BRIGHT_MAGENTA, JSON.stringify(TokenArray, null, 2));
+    console.log(BRIGHT_MAGENTA,
+      '\n================================ TOKENS ================================\n' +
+      JSON.stringify(TokenArray, null, 2) +
+      '\n========================================================================'
+    );
+  }
+
+  if (flags.print_function_signatures == true) {
+    console.log(BLUE,
+      '\n========================= FUNCTION SIGNATURES ==========================\n' +
+      JSON.stringify(funcSigTable, null, 2) +
+      '\n========================================================================'
+    );
   }
 
   genParseTree();
 
   if (flags.print_tree === true) {
-    console.log(YELLOW, JSON.stringify(parseTree, null, 2));
+    console.log(BRIGHT_YELLOW,
+      '\n========================= ABSTRACT SYNTAX TREE =========================\n' +
+      JSON.stringify(parseTree, null, 2) +
+      '\n========================================================================'
+    );
   }
 
   if (flags.print_symbol_table === true) {
-    console.log(BRIGHT_BLUE, JSON.stringify(globalSymbolTable, null, 2));
+    console.log(BRIGHT_BLUE,
+      '\n========================= SYMBOL TABLE =================================\n' +
+      JSON.stringify(globalSymbolTable, null, 2) +
+      '\n========================================================================');
   }
 
   if (flags.print_function_table === true) {
-    console.log(BRIGHT_RED, JSON.stringify(functionTable, null, 2));
+    console.log(BRIGHT_RED,
+      '\n========================= FUNCTION TABLE ===============================\n' +
+      JSON.stringify(functionTable, null, 2) +
+      '\n========================================================================'
+    );
   }
 
   let file_out = file_name.replace('.wat', '.wasm');

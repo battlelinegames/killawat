@@ -6,6 +6,11 @@ module.exports.WasmModule = WasmModule;
 
 module.exports.TokenArray = [];
 
+var funcSigTable = [];
+module.exports.funcSigTable = funcSigTable;
+var funcSigMap = new Map();
+module.exports.funcSigMap = funcSigMap;
+
 // COLOR STUFF
 const RED = '\x1b[31m%s\x1b[37m';
 const WHITE = '\x1b[37m%s\x1b[37m';

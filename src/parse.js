@@ -1,4 +1,5 @@
-const { WasmModule, binaryen, logError, TokenArray, globalSymbolTable, globalSymbolMap, functionTable } = require('./shared.js')
+const { WasmModule, binaryen, logError, TokenArray, funcSigMap, funcSigTable,
+  globalSymbolTable, globalSymbolMap, functionTable } = require('./shared.js')
 const { binaryenTerminalMap, binaryenUnaryMap, binaryenBinaryMap } = require('./binaryenMaps.js');
 // DO I WANT TO CALL THIS A BRANCH OR AN EXPRESSION
 // STARTING_TOKEN, KEYWORD, IDENTIFIER, TYPE
@@ -8,11 +9,21 @@ var parseTree = {};
 module.exports.parseTree = parseTree;
 
 function lookAheadRP(start_index, level) {
+  if (level == null) {
+    level = TokenArray[start_index].level;
+  }
+
   for (let i = start_index; i < TokenArray.length; i++) {
     if (TokenArray[i].type === 'rp' && TokenArray[i].level === level) {
       return i;
     }
   }
+  logError(`
+  No ending right paren found:
+  start: ${start_index}
+  level: ${level}
+  TokenArray.length: ${TokenArray.length}
+  `, TokenArray[start_index])
 }
 
 
@@ -121,12 +132,48 @@ function binaryenFromGlobalSet(set_index, param_token, func_branch) {
 
   token.children.push(param_token);
   token.expression = WasmModule.global.set(local.varIndex, param_token.expression);
-  console.log('===================SET LOCAL=====================')
-  console.log(token);
-  console.log('==================================================')
-  //  token.expression = bf(param_token.expression);
   return token;
 
+}
+
+// IT LOOKS LIKE THE PARAMETERS ARE GETTING DROPPED RIGHT NOW!!!
+// Module#call(name: string, operands: ExpressionRef[], returnType: Type):
+function binaryenExpFromCall(call_index, param_tokens_arr) {
+  let token = TokenArray[call_index];
+  let idToken = TokenArray[call_index + 1];
+  let text = token.text;
+  // sig will have params and result
+  let sig = null;
+
+  if (idToken.type === 'name') {
+    sig = funcSigMap.get(idToken.value);
+  }
+  else if (idToken.type === 'int_literal') {
+    sig = funcSigTable[idToken.value];
+  }
+  else {
+    logError(`name or int literal expected to follow call`, token);
+    return;
+  }
+
+  // RIGHT NOW I'M NOT CHECKING THE TYPES, ONLY THE NUMBER OF PARAMETERS
+  if (sig.params.length !== param_tokens_arr.length) {
+
+    // FOR SOME REASON THE NUMBER OF PARAMETERS IN THE SIGNATURE IS NULL
+    logError(`number of parameters in call (${param_tokens_arr.length}) does not match the function signature (${sig.params.length})`,
+      token);
+    return;
+  }
+
+  for (let i = 0; i < param_tokens_arr.length; i++) {
+    token.children.push(param_tokens_arr[i]);
+  }
+
+  token.result = sig.result;
+  token.params = sig.params.map(x => x);
+  param_expressions = param_tokens_arr.map(token => token.expression);
+  token.expression = WasmModule.call(sig.name, param_expressions, sig.result);
+  return token;
 }
 
 function binaryenExpFromUnary(unary_index, param_token) {
@@ -231,6 +278,18 @@ function BuildExpressionBranch(index, func_branch) {
       BuildExpressionBranch(param1_i, func_branch),
       BuildExpressionBranch(param2_i, func_branch));
   }
+  else if (token.type === 'call') {
+    let endingRP = lookAheadRP(index, token.level);
+    let nextLP = lookAheadLP(index);
+    let paramArray = [];
+
+    while (nextLP < endingRP) {
+      // I NEED TO ACTUALLY CREATE THE EXPRESSION BEFORE PUSHING INTO THE PARAM ARRAY
+      paramArray.push(binaryenExpFromTerminal(nextLP + 1, func_branch));
+      nextLP = lookAheadLP(nextLP + 1);
+    }
+    return binaryenExpFromCall(index, paramArray);
+  }
   else if (token.type === 'local_set') {
     let param_i = lookAheadLP(index) + 1;
     return binaryenFromLocalSet(index, BuildExpressionBranch(param_i, func_branch), func_branch);
@@ -274,6 +333,33 @@ function createFunctionBlock(start_index, func_branch) {
         let p2 = funcStack.pop();
         let p1 = funcStack.pop();
         token = binaryenExpFromBinary(i, p1, p2)
+      }
+      else if (token.type === 'call') {
+        parentToken = true;
+        let paramArray = [];
+        let nextToken = TokenArray[++i];
+
+        let sig = null;
+
+        if (nextToken.type === 'name') {
+          sig = funcSigMap.get(nextToken.value);
+        }
+        else if (nextToken.type === 'int_literal') {
+          sig = funcSigTable[nextToken.value];
+        }
+        else {
+          logError(`name or int literal expected to follow call`, token);
+          return;
+        }
+
+        for (let param_i = 0; param_i < sig.params.length; param_i++) {
+          paramArray.unshift(funcStack.pop());
+
+        }
+        token = binaryenExpFromCall(i - 1, paramArray);
+        // THE RESULT IS NULL FOR SOME CRAZY REASON.  I NEED TO SET THE TOKEN TO HAVE THE RIGHT RESULT & PARAMS
+        console.log('============== TOKEN ================')
+        console.log(token);
       }
       else if (token.type === 'local_set') {
         parentToken = true;
@@ -347,6 +433,8 @@ function createFunctionBlock(start_index, func_branch) {
   }
 
   let create_type = binaryen.createType(func_branch.params.map(param => param.btype));
+  console.log('********************* func_branch.block *************************');
+  console.log(func_branch.block);
   let block = func_branch.block.map(tok => tok.expression);
 
   let funcref = WasmModule.addFunction(func_branch.name,

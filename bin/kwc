@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 
 const args = process.argv;
+const RED = '\x1b[31m';
+const WHITE = '\x1b[37m';
+const GREEN = '\x1b[32m';
+const YELLOW = '\x1b[33m';
 
 ({ compile, log_support } = require('../src/killawat'));
 
@@ -15,6 +19,13 @@ if (args.length <= 2) {
       The -o flag allows you to specify an output file.
   
     Flags:
+    ${YELLOW}--print-ft${WHITE} print the function table
+    ${YELLOW}--print-fs${WHITE} print the function signature list
+    ${YELLOW}--print-globals${WHITE} print the global variables
+    ${YELLOW}--print-tree${WHITE} print the abstract syntax tree
+    ${YELLOW}--tokens${WHITE} print the tokens
+  
+    ${RED}NONE OF THE FLAGS BELOW WORK YET
     ${YELLOW}-o${WHITE} is followed by an output file name);
 
     ${YELLOW}-O1${WHITE} minimal performance optmization
@@ -38,6 +49,9 @@ if (args.length <= 2) {
     ${YELLOW}--annotations${WHITE} custom annotations (proposal)
     ${YELLOW}--gc${WHITE} garbage collection (proposal)
     `);
+
+  log_support();
+
   return;
 }
 
@@ -62,12 +76,16 @@ let flags = {
   print_function_table: false,
   print_symbol_table: false,
   print_tree: false,
+  print_function_signatures: false,
   tokens: false
 }
 
 for (let i = 0; i < args.length; i++) {
   if (args[i] === '--print-ft') {
     flags.print_function_table = true;
+  }
+  else if (args[i] === '--print-fs') {
+    flags.print_function_signatures = true;
   }
   else if (args[i] === '--print-globals') {
     flags.print_symbol_table = true;
