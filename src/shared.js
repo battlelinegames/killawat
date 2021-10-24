@@ -1,15 +1,11 @@
 const binaryen = require('binaryen');
 module.exports.binaryen = binaryen;
 
-var WasmModule = new binaryen.Module();
+const WasmModule = new binaryen.Module();
 module.exports.WasmModule = WasmModule;
 
-module.exports.TokenArray = [];
-
-var funcSigTable = [];
-module.exports.funcSigTable = funcSigTable;
-var funcSigMap = new Map();
-module.exports.funcSigMap = funcSigMap;
+const TokenArray = [];
+module.exports.TokenArray = TokenArray;
 
 // COLOR STUFF
 const RED = '\x1b[31m%s\x1b[37m';
@@ -44,23 +40,6 @@ module.exports.BRIGHT_MAGENTA = BRIGHT_MAGENTA;
 module.exports.BRIGHT_CYAN = BRIGHT_CYAN;
 module.exports.BRIGHT_WHITE = BRIGHT_WHITE;
 
-// FUNCTION TABLE STUFF
-let functionTable = [];
-module.exports.functionTable = functionTable;
-let functionMap = new Map();
-module.exports.functionMap = functionMap;
-
-
-// SYMBOL TABLE STUFF
-let globalSymbolMap = new Map();
-module.exports.globalSymbolMap = globalSymbolMap;
-
-let globalSymbolTable = [];
-module.exports.globalSymbolTable = globalSymbolTable;
-let symbolTable = [[]];
-module.exports.symbolTable = symbolTable;
-
-
 module.exports.logError = function logError(caption, token) {
   if (token != null) {
     if (token.key == null) {
@@ -84,23 +63,112 @@ module.exports.logError = function logError(caption, token) {
     `.replace(/^( ){2}/gm, ''));
   }
 }
-// module|func|type|import|export|table|funcref|elem|global[^.]|memory
-class State {
-  static MODULE = 0;
-  static FUNC = 1;
-  static TYPE = 2;
-  static IMPORT = 3;
-  static EXPORT = 4;
-  static TABLE = 5;
-  static FUNC_REF = 6;
-  static ELEM = 7;
-  static GLOBAL = 8;
-  static MEMORY = 9;
-  static FUNC_BODY = 10;
-  static currentState = State.MODULE;
-  static name = "unknown";
-  static index = 0;
+
+// GLOBAL TABLES
+const globalSymbolTable = [];
+const globalSymbolMap = new Map();
+module.exports.globalSymbolTable = globalSymbolTable;
+module.exports.globalSymbolMap = globalSymbolMap;
+
+// FUNCTION TABLES
+const funcSymbolTable = [];
+const funcSymbolMap = new Map();
+module.exports.funcSymbolTable = funcSymbolTable;
+module.exports.funcSymbolMap = funcSymbolMap;
+
+const valtypeMap = new Map([
+  ['i32', binaryen.i32],
+  ['i64', binaryen.i64],
+  ['f32', binaryen.f32],
+  ['f64', binaryen.f64],
+  ['v128', binaryen.v128],
+  ['funcref', binaryen.funcref],
+  ['anyref', binaryen.anyref],
+  ['nullref', binaryen.nullref],
+  ['externref', binaryen.externref],
+  ['unreachable', binaryen.unreachable],
+  ['auto', binaryen.auto],
+  ['none', binaryen.none]
+]);
+
+module.exports.valtypeMap = valtypeMap;
+
+const moduleDefinitions = [
+  'module',
+  'func',
+  'table',
+  'memory',
+  'global',
+  'elem',
+  'data',
+  'start',
+  'import',
+  'export'
+];
+
+module.exports.moduleDefinitions = moduleDefinitions;
+
+class UnaryDef {
+  constructor(paramType, resultType, binaryenFunc, text) {
+    //this.productionType = PRODUCTION.UNARY;
+    this.text = text;
+    this.paramType = paramType;
+    this.resultType = resultType;
+    this.binaryenFunc = binaryenFunc;
+  }
 }
 
+const constMap = new Map([
+  ['i32.const', WasmModule.i32.const],
+  ['f32.const', WasmModule.f32.const],
+  ['f64.const', WasmModule.f64.const],
+  ['i64.const', WasmModule.i64.const],
+]);
 
-module.exports.State = State;
+module.exports.constMap = constMap;
+
+const typeMap = new Map([
+  ['i32', binaryen.i32],
+  ['f32', binaryen.f32],
+  ['f64', binaryen.f64],
+  ['i64', binaryen.i64],
+]);
+
+module.exports.typeMap = typeMap;
+
+const unaryMap = new Map();
+const unaryArray = [
+  new UnaryDef(binaryen.i32, binaryen.i32, WasmModule.i32.clz, 'i32.clz'),
+  new UnaryDef(binaryen.i32, binaryen.i32, WasmModule.i32.ctz, 'i32.ctz'),
+  new UnaryDef(binaryen.i32, binaryen.i32, WasmModule.i32.popcnt, 'i32.popcnt'),
+  new UnaryDef(binaryen.i32, binaryen.i32, WasmModule.i32.eqz, 'i32.eqz'),
+  new UnaryDef(binaryen.auto, binaryen.none, WasmModule.drop, 'drop'),
+];
+
+unaryArray.forEach(unary => { unaryMap.set(unary.text, unary) });
+module.exports.unaryMap = unaryMap;
+module.exports.unaryArray = unaryArray;
+
+class BinaryDef {
+  constructor(paramType1, paramType2, resultType, binaryenFunc, text) {
+    //this.productionType = PRODUCTION.BINARY;
+    this.text = text;
+    this.paramType1 = paramType1;
+    this.paramType2 = paramType2;
+    this.resultType = resultType;
+    this.binaryenFunc = binaryenFunc;
+  }
+}
+
+const binaryMap = new Map();
+const binaryArray = [
+  new BinaryDef(binaryen.i32, binaryen.i32, binaryen.i32, WasmModule.i32.add, 'i32.add'),
+  new BinaryDef(binaryen.i32, binaryen.i32, binaryen.i32, WasmModule.i32.sub, 'i32.sub'),
+  new BinaryDef(binaryen.i32, binaryen.i32, binaryen.i32, WasmModule.i32.mul, 'i32.mul'),
+  new BinaryDef(binaryen.i32, binaryen.i32, binaryen.i32, WasmModule.i32.and, 'i32.and'),
+];
+
+binaryArray.forEach(binary => { binaryMap.set(binary.text, binary) });
+
+module.exports.binaryArray = binaryArray;
+module.exports.binaryMap = binaryMap;

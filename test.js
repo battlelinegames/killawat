@@ -2,6 +2,7 @@ const fs = require('fs');
 const binaryen = require('binaryen');
 
 var WasmModule = new binaryen.Module();
+WasmModule.addGlobal('$test', binaryen.i32, false, WasmModule.i32.const(0));
 
 let block = [];
 
@@ -9,6 +10,7 @@ let exp = WasmModule.i32.const(5)
 
 block.push(WasmModule.local.set(1, exp));
 block.push(WasmModule.local.get(1, binaryen.i32));
+
 
 WasmModule.addFunction("$test",
   binaryen.createType([binaryen.i32]),

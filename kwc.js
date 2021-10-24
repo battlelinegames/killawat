@@ -1,12 +1,10 @@
-#!/usr/bin/env node inspect
-
 const args = process.argv;
 const RED = '\x1b[31m';
 const WHITE = '\x1b[37m';
 const GREEN = '\x1b[32m';
 const YELLOW = '\x1b[33m';
 
-({ compile, log_support } = require('../src/killawat'));
+({ compile, log_support } = require('./src/killawat'));
 
 if (args.length <= 2) {
   console.log(`

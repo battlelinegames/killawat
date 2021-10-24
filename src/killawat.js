@@ -1,10 +1,18 @@
-const { TokenArray, funcSigTable,
+"use strict";
+
+// Object.freeze(obj);
+
+const { TokenArray, funcSigTable, ParseTree,
   YELLOW, RED, CYAN, BRIGHT_GREEN, BRIGHT_BLUE,
   BRIGHT_YELLOW, BRIGHT_MAGENTA, BRIGHT_RED,
-  WasmModule, binaryen, globalSymbolTable, functionTable, BLUE } = require('./shared.js')
+  WasmModule, binaryen, globalSymbolTable, functionTable, BLUE, funcSymbolTable } = require('./shared.js')
 const fs = require('fs');
 const { tokenize } = require("./tokenizer.js");
-const { genParseTree, parseTree } = require('./parse.js');
+//const { buildTables } = require('./tables.js');
+const { Module } = require('./module.js');
+const { Global } = require('./global.js');
+const { Func } = require('./func.js');
+//const { genParseTree, parseTree } = require('./parse.js');
 
 function log_error(error_string) {
   console.log(RED, `
@@ -39,8 +47,28 @@ function compile(file_name, flags) {
   console.log(BRIGHT_YELLOW, `compile ${file_name}`)
   var bytes = fs.readFileSync(file_name);
   var code = bytes.toString();
+
   tokenize(code);
 
+  // THIS PARSE TREE IS GARBAGE!!!
+  //let parseTree = new ParseTree(0, TokenArray.length - 1);
+  let module = new Module(TokenArray);
+  //WasmModule.addGlobal('$import_integer_32', binaryen.i32, false, 1);
+  module.globalExpressionTokens.forEach(tokenArray => new Global(tokenArray.slice(2, -1)));
+
+  module.funcExpressionTokens.forEach(tokenArray => new Func(tokenArray.slice(1)));
+
+  //  buildTables(parseTree);
+
+  //console.log(globalSymbolTable);
+
+  //console.log('=================== FUNCTION SIGNATURES =====================');
+  //console.log(JSON.stringify(funcSigTable, null, 2));
+
+  // NOW THAT YOU HAVE THE TABLES BUILT, LOOK AT THE AST
+
+  //  genBinaryenTree(parseTree);
+  /*
   if (flags.tokens === true) {
     console.log(BRIGHT_MAGENTA,
       '\n================================ TOKENS ================================\n' +
@@ -81,11 +109,14 @@ function compile(file_name, flags) {
       '\n========================================================================'
     );
   }
+  */
 
   let file_out = file_name.replace('.wat', '.wasm');
   console.log(BRIGHT_GREEN, `
   Output File: ${file_out}`);
+  if (!WasmModule.validate()) console.log("validation error");
   fs.writeFileSync(file_out, WasmModule.emitBinary());
+
 }
 
 module.exports = { compile, log_error, log_support };

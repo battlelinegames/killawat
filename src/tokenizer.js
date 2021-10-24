@@ -1,20 +1,23 @@
-const { TokenArray, funcSigTable, funcSigMap } = require("./shared.js");
+const { TokenArray, valtypeMap, moduleDefinitions, unaryArray, binaryArray, logError, typeMap } = require("./shared.js");
+
 const binaryen = require("binaryen");
 const moo = require("moo");
 var level = 0;
 var index = 0;
+var prevLP = false;
 
-/*
-*/
+function escapeRegExp(text) {
+  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+}
 
 const lexer = moo.compile({
   ws: /[ \t]+/,
   lp: {
     match: /\(/,
     value: s => {
+      prevLP = true;
       return {
         level: ++level,
-        index: index++,
         result: null,
         value: s,
       }
@@ -23,9 +26,9 @@ const lexer = moo.compile({
   rp: {
     match: /\)/,
     value: s => {
+      prevLP = false;
       return {
         level: level--,
-        index: index++,
         result: null,
         value: s,
       }
@@ -35,24 +38,24 @@ const lexer = moo.compile({
     match: /;;[^\n]*/,
     value: s => s.substring(1)
   },
-  comma: ",",
-  lbracket: "[",
-  rbracket: "]",
+  comma: ",",       // MUST FIX
+  lbracket: "[",    // MUST FIX
+  rbracket: "]",    // MUST FIX
   string_literal: {
     match: /"(?:[^\n\\"]|\\["\\ntbfr])*"/,
     value: s => {
+      prevLP = false;
       return {
         level: level,
-        index: index++,
         value: JSON.parse(s),
         result: null,
       }
     }
   },
   hex_literal: {
-    // I NEED TO DO SOMETHING ABOUT BIGINT
     match: /0x[0-9a-fA-F][0-9a-fA-F_]*/,
     value: s => {
+      prevLP = false;
       s = s.replaceAll('_', '');
       let n = 0;
       let n_hi = 0;
@@ -60,17 +63,20 @@ const lexer = moo.compile({
       if (s.length < 10) {
         n = parseInt(s, 16);
       }
-      else {
+      else if (s.length < 18) {
         isBig = true;
         let big_literal = BigInt(s);
         n = parseInt(big_literal & 0xff_ff_ff_ffn);
         n_hi = parseInt(big_literal >> 32n);
       }
+      else {
+        // if this is a hex value that is more than 8 bytes long, it should be kept as a string
+        n = s;
+      }
 
       return {
         type: 'int_literal',
         level: level,
-        index: index++,
         value: n,
         hival: n_hi,
         bigint: isBig,
@@ -82,6 +88,7 @@ const lexer = moo.compile({
     // I NEED TO DO SOMETHING ABOUT BIGINT
     match: /0b[01][01_]*/,
     value: s => {
+      prevLP = false;
       s = s.replaceAll('_', '');
       let n = 0;
       let n_hi = 0;
@@ -90,18 +97,19 @@ const lexer = moo.compile({
       if (s.length < 34) {
         n = parseInt(s.replace('0b', ''), 2);
       }
-      else {
+      else if (s.length < 66) {
         isBig = true;
         let big_literal = BigInt(s);
         n = parseInt(big_literal & 0xff_ff_ff_ffn);
         n_hi = parseInt(big_literal >> 32n);
       }
-
+      else {
+        n = s;
+      }
 
       return {
         type: 'int_literal',
         level: level,
-        index: index++,
         value: n,
         hival: n_hi,
         bigint: isBig,
@@ -112,10 +120,10 @@ const lexer = moo.compile({
   float_literal: {
     match: /[0-9][0-9_]*\.[0-9][0-9_]*/,
     value: s => {
+      prevLP = false;
       let n = parseFloat(s);
       return {
         level: level,
-        index: index++,
         value: n,
         result: null,
       }
@@ -126,6 +134,7 @@ const lexer = moo.compile({
     match: /[0-9][0-9_]*/,
     value: s => {
       //let n = parseInt(s.replaceAll('_', ''));
+      prevLP = false;
       let n = 0;
       let n_hi = 0;
       let isBig = false;
@@ -141,7 +150,6 @@ const lexer = moo.compile({
       }
       return {
         level: level,
-        index: index++,
         value: n,
         hival: n_hi,
         bigint: isBig,
@@ -152,157 +160,152 @@ const lexer = moo.compile({
   name: {
     match: /\$[a-z_][a-z_0-9]*/,
     value: s => {
+      prevLP = false;
       return {
         level: level,
-        index: index++,
         result: null,
         value: s,
       }
     }
   },
   terminal: {
-    match: /global\.get|local\.get|i32\.const|f32\.const|i64\.const|f64\.const|nop|unreachable/,
+    match: /local\.get|global\.get|get_global|get_local|i32\.const|i64\.const|f32\.const|f64\.const|nop|unreachable/,
     value: s => {
+      let value = s !== 'get_local' ? s : 'local.get';
+      value = value !== 'get_global' ? s : 'global.get';
+      prevLP = false;
       return {
         level: level,
-        index: index++,
+        result: null,
+        value: value,
+      }
+    }
+  },
+  module_definitions: {
+    match: new RegExp(moduleDefinitions.join('|')), // module, func, global, etc.
+    value: s => {
+      prevLP = false;
+      return {
+        level: level,
         result: null,
         value: s,
       }
     }
   },
-  global_set: {
-    // for some reason global.set requires a name and local.set requires an index.
-    match: /global\.set|set_global/,
+  function_definition: {
+    match: /param|result|local/,
     value: s => {
-      // i could check the first 3 characters for btype here
-      // the type the function consumes may require a lookup
+      prevLP = false;
+      let value = 1;
+      if (s === 'result') value = 2;
+      else if (s === 'local') value = 3;
       return {
         level: level,
-        index: index++,
-        result: binaryen.none,
-        btype: binaryen.none,
-        consumes: [],
-        value: s,
-      }
-    }
-  },
-  local_set: {
-    // for some reason global.set requires a name and local.set requires an index.
-    match: /local\.set|set_local/,
-    value: s => {
-      // i could check the first 3 characters for btype here
-      // the type the function consumes may require a lookup
-      return {
-        level: level,
-        index: index++,
-        result: binaryen.none,
-        btype: binaryen.none,
-        consumes: [],
-        value: s,
-      }
-    }
-  },
-  global_level: {
-    match: /module|func|type|import|export|table|funcref|elem|global|memory/,
-    value: s => {
-      let type = 'global_level';
-      if (level > 2) {
-        type = 'sig';
-      }
-      return {
-        type: type,
-        level: level,
-        index: index++,
         result: null,
-        value: s,
-      }
-    }
-  },
-  sig: {
-    match: /param|result|local|mut/,
-    value: s => {
-      return {
-        level: level,
-        index: index++,
-        result: null,
-        value: s,
+        value: value,
       }
     }
   },
   call: {
     match: /call|call_indirect/,
     value: s => {
+      prevLP = false;
       return {
         level: level,
-        index: index++,
         result: null,
-        params: [],
         value: s,
       }
     }
   },
-  control: {
-    match: /block|if|else|end|then|loop|br_if|br|switch|return|select/,
+  attributes: {
+    match: /mut|export|import/,
     value: s => {
+      prevLP = false;
       return {
         level: level,
-        index: index++,
         result: null,
         value: s,
       }
     }
   },
   unary: {
-    match: /i32.clz|i32.ctz|i32.popcnt|i32.eqz/,
+    // unary and binary values contain '.' (example i32.eqz) and must be escaped
+    match: new RegExp(unaryArray.map(unarydef => escapeRegExp(unarydef.text)).join('|')),
     value: s => {
-      // i could check the first 3 characters for btype here
-      // the type the function consumes may require a lookup
+      prevLP = false;
       return {
         level: level,
-        index: index++,
-        result: binaryen.i32,
-        consumes: [binaryen.i32],
+        result: null,
         value: s,
       }
     }
   },
   binary: {
-    match: /i32.add|i32.sub|i32.mul|i32.and/,
+    // unary and binary values contain '.' (example i32.eqz) and must be escaped
+    match: new RegExp(binaryArray.map(unarydef => escapeRegExp(unarydef.text)).join('|')),
     value: s => {
-      // i could check the first 3 characters for btype here
-      // the types the function consumes may require a lookup
+      prevLP = false;
       return {
         level: level,
-        index: index++,
-        result: binaryen.i32,
-        consumes: [binaryen.i32, binaryen.i32],
+        result: null,
         value: s,
       }
     }
   },
-  type: {
-    match: /i32|i64|f32|f64/,
+  begin_block: {
+    match: /block|if|loop/, // |switch|select
     value: s => {
-      let btype = binaryen.none;
-      if (s === 'i32') {
-        btype = binaryen.i32;
-      }
-      else if (s === 'f32') {
-        btype = binaryen.f32;
-      }
-      else if (s === 'i64') {
-        btype = binaryen.i64;
-      }
-      else if (s === 'f64') {
-        btype = binaryen.f64;
-      }
+      level = prevLP ? level : level + 1;
+      prevLP = false;
       return {
         level: level,
-        index: index++,
-        btype: btype,
         result: null,
         value: s,
+      }
+    }
+  },
+  then_block: {
+    match: /then/,
+    value: s => {
+      prevLP = false;
+      return {
+        level: level,
+        result: null,
+        value: s,
+      }
+    }
+  },
+  else_block: {
+    match: /else/,
+    value: s => {
+      prevLP = false;
+      return {
+        level: level,
+        result: null,
+        value: s,
+      }
+    }
+  },
+  end_block: {
+    match: /end/,
+    value: s => {
+      prevLP = false;
+      return {
+        level: level--,
+        result: null,
+        value: s,
+      }
+    }
+  },
+  valtype: {
+    match: new RegExp(Array.from(valtypeMap.keys()).join('|')), // i32, f32, etc.
+    value: s => {
+      let value = typeMap.get(s);
+      prevLP = false;
+      return {
+        level: level,
+        result: null,
+        value: value,
       }
     }
   },
@@ -312,7 +315,6 @@ const lexer = moo.compile({
     value: s => {
       return {
         level: level,
-        index: index++,
         result: null,
         value: s,
       }
@@ -320,111 +322,132 @@ const lexer = moo.compile({
   },
 });
 
+//  Attribute
+//  ParseTree
+function toString() {
+  return `
+  type: ${this.type}
+  text: ${this.text}
+  level: ${this.level}
+  value: ${this.value}
+  `.replaceAll('  ', '  '.repeat(this.level + 2));
+}
 lexer.next = (next => () => {
   let tok;
   while ((tok = next.call(lexer)) &&
-    (tok.type === "comment" || tok.type === "ws")
+    (tok.type === "comment" || tok.type === "ws" || tok.type === 'nl')
+    // I may need to add new lines back in
   ) { }
-  return tok;
+
+  if (tok != null) {
+    tok.index = TokenArray.length;
+    tok = Object.assign(tok, tok.value);
+    tok.toString = toString.bind(tok);
+    return tok;
+  }
+  return null;
 })(lexer.next);
 
-/*
-I MIGHT CREATE A STATE MACHINE HERE
-I COULD SUCK UP THE FUNCTION SIGNATURE AS I'M PASISNG THROUGH
-*/
-var funcSigState = 0;
-var tempFuncObj = {
-  name: "unknown",
-  result: binaryen.none,
-  params: [],
-  locals: []
-};
+
+var functionState = 0;
+const nameState = 1;
+const exportState = 2;
+const paramState = 3;
+const resultState = 4;
+const localState = 5;
+const blockState = 6;
+
+var currentBranch = null;
+var parenMatchStack = [];
+var blockMatchStack = [];
+
+function isBody(token) {
+  if (token.type !== 'function_definition' && token.text !== 'export') {
+    return true;
+  }
+  return false;
+}
+
+function findFuncBlock() {
+  // THIS IS TOTALLY BUSTED
+  for (let i = 0; i < TokenArray.length; i++) {
+    let token = TokenArray[i];
+    if (token.text === 'func' && token.level === 2) {
+      let func_tok = token;
+
+      for (let j = i + 1; j < TokenArray[i - 1].endTokenIndex; j++) {
+        let tok = TokenArray[j];
+
+        if (tok.type === 'name') {
+          continue;
+        }
+        else if (tok.type === 'lp') {
+          if (isBody(TokenArray[j + 1])) {
+            func_tok.bodyStart = j;
+            break;
+          }
+          j = tok.endTokenIndex;
+        }
+        else {
+          func_tok.bodyStart = j;
+          break;
+        }
+      }
+    }
+  }
+}
+
+function matchTokens() {
+  for (let i = 0; i < TokenArray.length; i++) {
+    let token = TokenArray[i];
+    if (token.type === 'lp') {
+      parenMatchStack.push(token);
+    }
+    else if (token.type === 'rp') {
+      let lpTok = parenMatchStack.pop();
+      lpTok.endTokenIndex = token.index;
+      lpTok.endTokenOffset = token.index - lpTok.index;
+      token.beginTokenIndex = lpTok.index;
+      token.beginTokenOffset = lpTok.index - token.index;
+
+    }
+    else if (token.type === 'begin_block' && TokenArray[i - 1].type !== 'lp') {
+      blockMatchStack.push(token);
+    }
+    else if (token.type === 'end_block') {
+      let beginTok = blockMatchStack.pop();
+      beginTok.endTokenIndex = token.index;
+      beginTok.endTokenOffset = token.index - beginTok.index;
+      token.beginTokenIndex = beginTok.index;
+      token.beginTokenOffset = beginTok.index - token.index;
+    }
+    else if (token.type === 'else_block' && TokenArray[i - 1].type !== 'lp') {
+      let beginTok = blockMatchStack.pop();
+      if (beginTok == null || beginTok.text !== 'if') {
+        logError(`'else' found without matching 'if'`, token);
+        return;
+      }
+
+      beginTok.endTokenIndex = token.index;
+      beginTok.endTokenOffset = token.index - beginTok.index
+      token.beginTokenIndex = beginTok.index;
+      token.beginTokenOffset = beginTok.index - token.index;
+
+      blockMatchStack.push(token);
+    }
+  }
+}
 
 module.exports.tokenize = function tokenize(code) {
-  // multiline comments were throwing off moo.js.  I removed them here.
-  let comment_array = code.match(/\(;(?:(\n)|[^\n])*?;\)/gm) || [];
-  for (let i = 0; i < comment_array.length; i++) {
-    let comment = comment_array[i];
-    let white_space = comment.match(/\s/gm);
-    code = code.replace(comment, white_space.join(''));
-  }
-
   lexer.reset(code);
-  let token = lexer.next();
-  const unknownState = 0xff;
-  const nameState = 1;
-  const paramState = 2;
-  const resultState = 3;
-  const localState = 4;
+  let token = lexer.next()
 
-  // one token look ahead
   while (token != null) {
-    token.children = [];
-    token.attributes = [];
-    let push_tok = Object.assign(token, token.value);
-
-    if (funcSigState > 0) {
-      if (funcSigState === nameState && push_tok.type === 'name') {
-        tempFuncObj.name = push_tok.text;
-        funcSigState = unknownState;
-      }
-      else if (funcSigState == unknownState && push_tok.text === 'param') {
-        funcSigState = paramState;
-      }
-      else if (funcSigState == unknownState && push_tok.text === 'result') {
-        funcSigState = resultState;
-      }
-      // I DON'T THINK I NEED TO TRACK THE LOCALS FOR THE SIGNATURE
-      // I MAY WANT TO CHANGE THIS PART
-      else if (funcSigState == unknownState && push_tok.text === 'local') {
-        funcSigState = localState;
-      }
-      else if (push_tok.type === 'rp' && push_tok.level > 2) {
-        funcSigState = unknownState;
-      }
-      else if (push_tok.type === 'type') {
-        if (funcSigState === paramState) {
-          tempFuncObj.params.push(push_tok.btype);
-        }
-        else if (funcSigState === resultState) {
-          tempFuncObj.result = push_tok.btype;
-        }
-        else if (funcSigState === localState) {
-          tempFuncObj.locals.push(push_tok.btype);
-        }
-      }
-    }
-
-    if (push_tok.text === 'func' && push_tok.level === 2 && funcSigState === 0) {
-      funcSigState = nameState;
-      tempFuncObj.name = `$func_${funcSigTable.length}`;
-    }
-    else if (push_tok.type === 'rp' && push_tok.level === 2 && funcSigState > 0) {
-
-      let push_obj = Object.assign(
-        {
-          name: tempFuncObj.name,
-          result: tempFuncObj.result,
-          params: tempFuncObj.params.map(x => x),
-          locals: tempFuncObj.locals.map(x => x)
-        });
-
-      funcSigTable.push(push_obj)
-      funcSigMap.set(push_obj.name, push_obj);
-
-      tempFuncObj.name = "unknown";
-      tempFuncObj.result = binaryen.none;
-
-      tempFuncObj.params = [];
-      tempFuncObj.locals = [];
-
-      funcSigState = 0;
-    }
-
-    //delete push_tok.value;
-    TokenArray.push(push_tok);
+    TokenArray.push(token);
     token = lexer.next();
   }
-  //console.log(TokenArray);
+
+  matchTokens();
+  findFuncBlock();
   return TokenArray;
 }
