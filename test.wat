@@ -33,6 +33,8 @@
   (func (export "export_func") (result i32) (local $a i32) (local $b i32)
     i32.const 90
     nop
+    call $$name
+    i32.const 1
   )
 )
 
