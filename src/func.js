@@ -253,6 +253,10 @@ class Func {
     let condition = null;
     let endConditionTokenOffset = null;
     if (tokenArray[1].type === 'lp') {
+      if (tokenArray[2].text === 'then') {
+        logError(`missing condition branch after '(if'`, tokenArray[2]);
+        return null;
+      }
       endConditionTokenOffset = tokenArray[1].endTokenOffset;
       condition = this.bodyBranch(tokenArray.slice(2, 1 + endConditionTokenOffset));
     }
@@ -479,9 +483,6 @@ class Func {
         else {
           stack.push(unaryStackEntry);
         }
-
-        let x = 3;
-        console.log(x);
       }
       else if (token.type === 'binary') {
         let binaryDef = binaryMap.get(startToken.text);

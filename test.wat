@@ -15,7 +15,7 @@
         end
     else
         ;; do something if $bool_i32 is 0
-        (if
+        (if (i32.const 1)
           (then 
             i32.const 7
             drop
