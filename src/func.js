@@ -48,13 +48,15 @@ class Func {
         i += token.endTokenOffset;
       }
       else if (token.type === 'name') {
-        this.id = token.text;
+        this.name = token.text;
       }
     }
 
     funcSymbolTable.push(this);
     funcSymbolMap.set(this.name, this);
-    // I'm not sure if slice should end with -1.  It depends on if the tokenArray included the ending ')'
+
+    // if I want to be able to call functions that are not declared yet I will need
+    // to wait to parse the body until after all functions defined in the funcSymbolTable
     this.parseBody(tokenArray.slice(bodyStart));
     if (this.bodyStack.length > 0) {
       this.body.push(this.bodyStack.pop());
@@ -65,6 +67,16 @@ class Func {
       this.locals.map(s => s.type),
       WasmModule.block(null, this.body.map(se => se.expression), this.result)
     );
+  }
+
+  static getFuncSymbol(idToken) {
+    if (idToken.type === 'name') {
+      return funcSymbolMap.get(idToken.value);
+    }
+    else if (idToken.type === 'int_literal') {
+      return funcSymbolTable[idToken.value];
+    }
+    return null;
   }
 
   getLocal(index) {
@@ -424,6 +436,33 @@ class Func {
       return new StackEntry(binaryFunc(paramSub1.expression, paramSub2.expression), binaryResult);
     }
     else if (startToken.type === 'call') {
+      if (nextToken.type !== 'name' &&
+        nextToken.type !== 'int_literal') {
+        logError(`call must be followed by a name or integer, not ${nextToken.text}`,
+          nextToken);
+        return;
+      }
+      // I NEED TO STEP THROUGH THIS
+      let func = Func.getFuncSymbol(nextToken);
+      let paramCount = func.params.length;
+      let paramIndex = 2;
+      let callParams = [];
+
+      for (let pi = 0; pi < paramCount; pi++) {
+        let paramTok = tokenArray[paramIndex];
+        if (paramTok.type !== 'lp') {
+          logError(`expected to see '(' instead of '${nextToken.text}'`);
+          return null;
+        }
+        let end = paramIndex + paramTok.endTokenOffset;
+        callParams.push(this.bodyBranch(tokenArray.slice(paramIndex + 1, end)));
+        paramIndex = end + 1;
+      }
+
+      return new StackEntry(
+        WasmModule.call(func.name, callParams.map(se => se.expression), func.result),
+        func.result
+      );
 
     }
     else if (startToken.type === 'terminal') {
@@ -476,12 +515,12 @@ class Func {
         let unaryFunc = unaryDef.binaryenFunc;
         let unaryResult = unaryDef.resultType;
 
-        let unaryStackEntry = new StackEntry(unaryFunc(stack.pop().expression), unaryResult);
-        if (unaryStackEntry.type === binaryen.none) {
-          block.push(unaryStackEntry);
+        let stackEntry = new StackEntry(unaryFunc(stack.pop().expression), unaryResult);
+        if (stackEntry.type === binaryen.none) {
+          block.push(stackEntry);
         }
         else {
-          stack.push(unaryStackEntry);
+          stack.push(stackEntry);
         }
       }
       else if (token.type === 'binary') {
@@ -500,7 +539,43 @@ class Func {
           return null;
         }
 
-        return new StackEntry(binaryFunc(paramSub1.expression, paramSub2.expression), binaryResult);
+        let stackEntry = new StackEntry(binaryFunc(paramSub1.expression, paramSub2.expression),
+          binaryResult);
+        if (stackEntry.type === binaryen.none) {
+          block.push(stackEntry);
+        }
+        else {
+          stack.push(stackEntry);
+        }
+      }
+      else if (token.type === 'call') {
+        if (nextToken.type !== 'name' &&
+          nextToken.type !== 'int_literal') {
+          logError(`call must be followed by a name or integer, not ${nextToken.text}`,
+            nextToken);
+          return;
+        }
+        // I NEED TO STEP THROUGH THIS
+        let func = Func.getFuncSymbol(nextToken);
+        let paramCount = func.params.length;
+        let callParams = [];
+
+        for (let pi = 0; pi < paramCount; pi++) {
+          let paramTok = stack.pop();
+          callParams.unshift(paramTok);
+        }
+
+        let stackEntry = new StackEntry(
+          WasmModule.call(func.name, callParams.map(se => se.expression), func.result),
+          func.result
+        );
+        if (stackEntry.type === binaryen.none) {
+          block.push(stackEntry);
+        }
+        else {
+          stack.push(stackEntry);
+        }
+
       }
       else if (token.type === 'begin_block') {
         if (token.text === 'if') {
