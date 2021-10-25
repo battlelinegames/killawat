@@ -15,6 +15,16 @@
         end
     else
         ;; do something if $bool_i32 is 0
+        (if
+          (then 
+            i32.const 7
+            drop
+          )
+          (else
+            i32.const 8
+            drop
+          )
+        )
         nop ;; i32.const 5
     
     end
