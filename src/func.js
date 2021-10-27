@@ -307,7 +307,9 @@ class Func {
     let elseStack = [];
     let elseBlock = [];
 
-    if (tokenArray[elseStartIndex].type === 'lp' &&
+    if (tokenArray[elseStartIndex] != null &&
+      tokenArray[elseStartIndex + 1] != null &&
+      tokenArray[elseStartIndex].type === 'lp' &&
       tokenArray[elseStartIndex + 1].text === 'else') {
       hasElse = true;
       let endElseIndex = tokenArray[elseStartIndex].endTokenOffset + elseStartIndex;
