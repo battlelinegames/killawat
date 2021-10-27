@@ -166,6 +166,7 @@ const binaryArray = [
   new BinaryDef(binaryen.i32, binaryen.i32, binaryen.i32, WasmModule.i32.sub, 'i32.sub'),
   new BinaryDef(binaryen.i32, binaryen.i32, binaryen.i32, WasmModule.i32.mul, 'i32.mul'),
   new BinaryDef(binaryen.i32, binaryen.i32, binaryen.i32, WasmModule.i32.and, 'i32.and'),
+  new BinaryDef(binaryen.i32, binaryen.i32, binaryen.i32, WasmModule.i32.eq, 'i32.eq'),
 ];
 
 binaryArray.forEach(binary => { binaryMap.set(binary.text, binary) });

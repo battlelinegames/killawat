@@ -12,6 +12,11 @@ function escapeRegExp(text) {
 
 const lexer = moo.compile({
   ws: /[ \t]+/,
+  comment: {
+    match: /(?:\(;(?:\n|.)*;\))|(?:;;[^\n]*)/, // /;;[^\n]*/,
+    value: s => s.substring(1)
+  },
+  // ANYTHING THAT INCLUDES A LEFT OR RIGHT PAREN MUST COME IN FRONT OF THIS
   lp: {
     match: /\(/,
     value: s => {
@@ -33,10 +38,6 @@ const lexer = moo.compile({
         value: s,
       }
     }
-  },
-  comment: {
-    match: /;;[^\n]*/,
-    value: s => s.substring(1)
   },
   comma: ",",       // MUST FIX
   lbracket: "[",    // MUST FIX
@@ -158,7 +159,7 @@ const lexer = moo.compile({
     }
   },
   name: {
-    match: /\$[a-z_][a-z_0-9]*/,
+    match: /\$[a-z_A-Z][a-zA-Z_0-9]*/,
     value: s => {
       prevLP = false;
       return {
@@ -183,6 +184,18 @@ const lexer = moo.compile({
   },
   module_definitions: {
     match: new RegExp(moduleDefinitions.join('|')), // module, func, global, etc.
+    value: s => {
+      prevLP = false;
+      return {
+        level: level,
+        result: null,
+        value: s,
+      }
+    }
+  },
+  set: {
+    // unary and binary values contain '.' (example i32.eqz) and must be escaped
+    match: /local\.set|global\.set/,
     value: s => {
       prevLP = false;
       return {
@@ -230,7 +243,7 @@ const lexer = moo.compile({
   },
   unary: {
     // unary and binary values contain '.' (example i32.eqz) and must be escaped
-    match: new RegExp(unaryArray.map(unarydef => escapeRegExp(unarydef.text)).join('|')),
+    match: new RegExp(unaryArray.map(def => escapeRegExp(def.text)).join('|')),
     value: s => {
       prevLP = false;
       return {
@@ -242,7 +255,18 @@ const lexer = moo.compile({
   },
   binary: {
     // unary and binary values contain '.' (example i32.eqz) and must be escaped
-    match: new RegExp(binaryArray.map(unarydef => escapeRegExp(unarydef.text)).join('|')),
+    match: new RegExp(binaryArray.map(def => escapeRegExp(def.text)).join('|')),
+    value: s => {
+      prevLP = false;
+      return {
+        level: level,
+        result: null,
+        value: s,
+      }
+    }
+  },
+  br: {
+    match: /br_if|br/,
     value: s => {
       prevLP = false;
       return {

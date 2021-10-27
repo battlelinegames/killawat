@@ -30,7 +30,7 @@ function log_support() {
   Contact Rick Battagline
   Twitter: @battagline
   https://wasmbook.com
-  v0.1.1
+  kwc version 0.0.15
   `);
 
 }

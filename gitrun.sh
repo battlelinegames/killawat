@@ -10,4 +10,5 @@ git push
 
 # npm stuff
 npm version patch
+node gitrun.sh
 npm publish

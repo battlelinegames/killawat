@@ -1,5 +1,6 @@
 const { constMap, valtypeMap, logError, binaryen, funcSymbolTable,
-  funcSymbolMap, unaryMap, WasmModule, globalSymbolTable, globalSymbolMap, TokenArray } = require('./shared');
+  funcSymbolMap, unaryMap, binaryMap, WasmModule, globalSymbolTable,
+  globalSymbolMap, TokenArray } = require('./shared');
 
 var blockCounter = 0;
 
@@ -28,6 +29,7 @@ class StackEntry {
 
 class Func {
   constructor(tokenArray) {
+    //console.log(TokenArray[0]);
     this.parseState = PARSE_STATE.START;
     this.name = `$func_${funcSymbolTable.length}`;
     this.exportName = null;
@@ -37,6 +39,8 @@ class Func {
     this.localMap = new Map();
     this.body = [];
     this.bodyStack = [];
+    this.blockArray = [];
+
     let startToken = tokenArray[0];
     let bodyStart = startToken.bodyStart - startToken.index;
 
@@ -218,6 +222,8 @@ class Func {
       else if (token.text === 'unreachable') {
         return new StackEntry(WasmModule.unreachable(), binaryen.none);
       }
+      logError(`terminal next token undefined`, token);
+      return null;
     }
     else if (token.text.slice(-5) === 'const') {
       let constFunc = constMap.get(token.text);
@@ -230,7 +236,7 @@ class Func {
       let localSymbol = null;
       if (nextToken.type === 'int_literal') {
         index = nextToken.value;
-        localSymbol.getLocal(index);
+        localSymbol = this.getLocal(index);
       }
       else if (nextToken.type === 'name') {
         localSymbol = this.localMap.get(nextToken.text);
@@ -257,7 +263,7 @@ class Func {
       return new StackEntry(WasmModule.global.get(globalSymbol.id, globalSymbol.globalType),
         globalSymbol.globalType);
     }
-    logError(`unknown keyword`, token);
+    logError(`unknown keyword '${token.text}'`, token);
     return null;
   }
 
@@ -389,7 +395,54 @@ class Func {
     let startToken = tokenArray[0];
     let nextToken = tokenArray[1];
 
-    if (startToken.type === 'unary') {
+    if (startToken.type === 'set') {
+      if (nextToken.type !== 'name' && nextToken.type !== 'int_literal') {
+        logError(`expected to see name or integer instead of '${nextToken.text}'`)
+        return null;
+      }
+      let sub = this.bodyBranch(tokenArray.slice(3, -1));
+      if (sub == null || sub.type === binaryen.none) {
+        logError(`${startToken.text} is not receiving the proper input type`, startToken);
+        return null;
+      }
+
+      if (startToken.text === 'local.set') {
+        let index = 0;
+        let localSymbol = null;
+
+        if (nextToken.type === 'int_literal') {
+          index = nextToken.value;
+          localSymbol = this.getLocal(index);
+        }
+        else if (nextToken.type === 'name') {
+          localSymbol = this.localMap.get(nextToken.text);
+          index = localSymbol.index;
+        }
+        else {
+          logError(`local.set must be followed by an integer or name, not ${nextToken.text}`, nextToken);
+          return null;
+        }
+
+        return new StackEntry(WasmModule.local.set(index, sub.expression), binaryen.none);
+      }
+      else { // global.set
+        let globalSymbol = null;
+        if (nextToken.type === 'int_literal') {
+          globalSymbol = globalSymbolTable[nextToken.value];
+        }
+        else if (nextToken.type === 'name') {
+          globalSymbol = globalSymbolMap.get(nextToken.text);
+        }
+        else {
+          logError(`global.get must be followed by an integer or name, not ${nextToken.text}`, nextToken);
+          return null;
+        }
+
+        return new StackEntry(WasmModule.local.set(globalSymbol.id, sub.expression), binaryen.none);
+
+      }
+    }
+    else if (startToken.type === 'unary') {
       let unaryDef = unaryMap.get(startToken.text);
       let unaryFunc = unaryDef.binaryenFunc;
       let unaryResult = unaryDef.resultType;
@@ -421,14 +474,14 @@ class Func {
         logError(`expected to see '(' instead of '${secondParamToken.text}'`);
         return null;
       }
-
-      let paramSub1 = this.bodyBranch(tokenArray.slice(2, nextToken.endTokenOffset));
+      // I need to add 1 to endTokenOffset because nextToken is at position 1
+      let paramSub1 = this.bodyBranch(tokenArray.slice(2, 1 + nextToken.endTokenOffset));
       if (paramSub1 == null || paramSub1.type != binaryDef.paramType1) {
         logError(`${startToken.text} is not receiving the proper input type`, startToken);
         return null;
       }
 
-      let paramSub2 = this.bodyBranch(tokenArray.slice(secondParamIndex, -1));
+      let paramSub2 = this.bodyBranch(tokenArray.slice(secondParamIndex + 1, -1));
       if (paramSub2 == null || paramSub2.type != binaryDef.paramType2) {
         logError(`${startToken.text} is not receiving the proper input type`, startToken);
         return null;
@@ -442,7 +495,7 @@ class Func {
           nextToken);
         return;
       }
-      // I NEED TO STEP THROUGH THIS
+
       let func = Func.getFuncSymbol(nextToken);
       let paramCount = func.params.length;
       let paramIndex = 2;
@@ -465,6 +518,48 @@ class Func {
       );
 
     }
+    else if (startToken.type === 'br') {
+      if (nextToken.type !== 'name' &&
+        nextToken.type !== 'int_literal') {
+        logError(`br/br_if must be followed by a name or integer, not ${nextToken.text}`,
+          nextToken);
+        return;
+      }
+
+      if (this.blockArray.length === 0) {
+        logError(`br/br_if must be used inside a block or loop`, token);
+        return;
+      }
+
+      let name = nextToken.value;
+      if (nextToken.type === 'int_literal') {
+        if (nextToken.value >= this.blockArray.length) {
+          logError(`break depth of ${nextToken.value} is invalid`, nextToken);
+          return;
+        }
+        name = this.blockArray[nextToken.value];
+      }
+
+      let br = null;
+      if (startToken.text === 'br_if') {
+        let sub = this.bodyBranch(tokenArray.slice(3, -1));
+        if (sub == null || sub.type !== binaryen.i32) {
+          logError(`br_if takes an i32 as input`, startToken);
+          return null;
+        }
+        br = WasmModule.br(name, sub.expression);
+      }
+      else {
+        br = WasmModule.br(name);
+      }
+
+      return new StackEntry(
+        br,
+        binaryen.none
+      );
+
+    }
+
     else if (startToken.type === 'terminal') {
       if (startToken.text === 'nop' || startToken.text === 'unreachable') {
         return this.terminal(startToken);
@@ -474,8 +569,18 @@ class Func {
       }
 
     }
+
     else if (startToken.text === 'if') {
       return this.ifBranch(tokenArray);
+    }
+    else if (startToken.type === 'begin_block') {
+      let blockBody = [];
+      let blockStack = [];
+      this.bodyBlock(tokenArray, blockBody, blockStack);
+      if (blockStack.length > 0) {
+        return blockStack.pop();
+      }
+      return blockBody.pop();
     }
 
   }
@@ -501,11 +606,9 @@ class Func {
       }
       else if (token.type === 'terminal') {
         if (token.text === 'nop' || token.text === 'unreachable') {
-          // THINK ABOUT WHERE PUSHING INTO THE BODY COULD GO WRONG
           block.push(this.terminal(token));
         }
         else {
-          // I NEED TO THINK ABOUT THE WAY I'M USING BODYSTACK HERE
           stack.push(this.terminal(token, nextToken));
           i++;
         }
@@ -548,6 +651,54 @@ class Func {
           stack.push(stackEntry);
         }
       }
+      else if (token.type === 'set') {
+        if (nextToken.type !== 'name' && nextToken.type !== 'int_literal') {
+          logError(`expected to see name or integer instead of '${nextToken.text}'`)
+          return null;
+        }
+        if (stack.length === 0) {
+          logError(`no values to pop from stack`, startToken);
+          return null;
+        }
+        let sub = stack.pop();
+
+        if (startToken.text === 'local.set') {
+          let index = 0;
+          let localSymbol = null;
+
+          if (nextToken.type === 'int_literal') {
+            index = nextToken.value;
+            localSymbol = this.getLocal(index);
+          }
+          else if (nextToken.type === 'name') {
+            localSymbol = this.localMap.get(nextToken.text);
+            index = localSymbol.index;
+          }
+          else {
+            logError(`local.set must be followed by an integer or name, not ${nextToken.text}`, nextToken);
+            return null;
+          }
+
+          block.push(new StackEntry(WebAssembly.local.set(index, sub.expression), binaryen.none));
+        }
+        else { // global.set
+          let globalSymbol = null;
+          if (nextToken.type === 'int_literal') {
+            globalSymbol = globalSymbolTable[nextToken.value];
+          }
+          else if (nextToken.type === 'name') {
+            globalSymbol = globalSymbolMap.get(nextToken.text);
+          }
+          else {
+            logError(`global.get must be followed by an integer or name, not ${nextToken.text}`, nextToken);
+            return null;
+          }
+
+          return new StackEntry(WebAssembly.local.set(globalSymbol.id, sub.expression), binaryen.none);
+
+        }
+      }
+
       else if (token.type === 'call') {
         if (nextToken.type !== 'name' &&
           nextToken.type !== 'int_literal') {
@@ -577,9 +728,45 @@ class Func {
         }
 
       }
+      else if (token.type === 'br') {
+        if (nextToken.type !== 'name' &&
+          nextToken.type !== 'int_literal') {
+          logError(`br/br_if must be followed by a name or integer, not ${nextToken.text}`,
+            nextToken);
+          return;
+        }
+
+        if (this.blockArray.length === 0) {
+          logError(`br/br_if must be used inside a block or loop`, token);
+          return;
+        }
+
+        let name = nextToken.value;
+        if (nextToken.type === 'int_literal') {
+          if (nextToken.value >= this.blockArray.length) {
+            logError(`break depth of ${nextToken.value} is invalid`, nextToken);
+            return;
+          }
+          name = this.blockArray[nextToken.value];
+        }
+
+        let br = null;
+        if (token.text === 'br_if') {
+          br = WasmModule.br(name, stack.pop().expression);
+        }
+        else {
+          br = WasmModule.br(name);
+        }
+
+        block.push(new StackEntry(
+          br,
+          binaryen.none
+        ));
+
+      }
       else if (token.type === 'begin_block') {
         if (token.text === 'if') {
-          let endIndex = i + token.endTokenOffset;
+          let endIndex = i + (token.endTokenOffset || (tokenArray.length - 1));
           if (tokenArray[endIndex].type === 'else_block') {
             endIndex += tokenArray[endIndex].endTokenOffset;
           }
@@ -594,9 +781,55 @@ class Func {
           i += endIndex;
         }
         else {
+          //this.blockArray
           // this will be for loop and block when I get to it
-          logError(`Rick hasn't added loops and blocks yet.  Please tell @battagline`, token);
-          return;
+          let endIndex = (i + token.endTokenOffset) || tokenArray.length; // endTokenOffset will be null when in parens
+          let name = `$block_${this.blockArray.length}`;
+          let subBlock = [];
+          if (nextToken.type === 'name') {
+            name = nextToken.text;
+            i++;
+          }
+
+          // this.blockArray is used by br and br_if
+          this.blockArray.unshift(name);
+
+          let stackLen = stack.length;
+          let blockType = binaryen.none;
+          this.bodyBlock(tokenArray.slice(i, endIndex), subBlock, stack);
+          if (stackLen < stack.length) {
+            // if the lenght of the stack has grown move an item to the subBlock
+            let se = stack.pop();
+            blockType = se.type;
+            subBlock.push(se);
+          }
+
+          let blockStackEntry = null;
+
+          if (token.text === 'block') {
+            blockStackEntry = new StackEntry(
+              WasmModule.block(name, subBlock.map(se => se.expression), blockType),
+              blockType
+            );
+          }
+          else {
+            let b = WasmModule.block(null, subBlock.map(se => se.expression), blockType);
+
+            blockStackEntry = new StackEntry(
+              WasmModule.loop(name, b),
+              blockType  // I'm not sure if this should be blockType or binaryen.none
+            );
+          }
+
+          if (blockType === binaryen.none) {
+            block.push(blockStackEntry);
+          }
+          else {
+            stack.push(blockStackEntry);
+          }
+          i += endIndex;
+
+          this.blockArray.shift();
         }
       }
     }
