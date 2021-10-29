@@ -76,6 +76,18 @@ const funcSymbolMap = new Map();
 module.exports.funcSymbolTable = funcSymbolTable;
 module.exports.funcSymbolMap = funcSymbolMap;
 
+// MEMORY TABLES
+const memoryTable = [];
+const memoryMap = new Map();
+module.exports.memoryTable = memoryTable;
+module.exports.memoryMap = memoryMap;
+
+// WASM TABLES
+const WasmTables = [];
+const WasmTableMap = new Map();
+module.exports.WasmTables = WasmTables;
+module.exports.WasmTableMap = WasmTableMap;
+
 const valtypeMap = new Map([
   ['i32', binaryen.i32],
   ['i64', binaryen.i64],
@@ -175,3 +187,6 @@ binaryArray.forEach(binary => { binaryMap.set(binary.text, binary) });
 
 module.exports.binaryArray = binaryArray;
 module.exports.binaryMap = binaryMap;
+
+var dataTable = [];
+module.exports.dataTable = dataTable;

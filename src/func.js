@@ -56,6 +56,7 @@ class Func {
       }
     }
 
+    this.index = funcSymbolTable.length;
     funcSymbolTable.push(this);
     funcSymbolMap.set(this.name, this);
 

@@ -1,7 +1,7 @@
 {
   "name": "killawat",
   "version": "0.0.18",
-  "description": "Killa' WAT is a WebAssembly Text Macro Assembler",
+  "description": "KillaWAT is a WebAssembly Text Macro Assembler",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -14,8 +14,14 @@
     "WebAssembly Text",
     "WAT",
     "Wasm",
+    "killawat",
+    "killa wat",
     "Wasm Text"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/battlelinegames/killawat.git"
+  },
   "homepage": "https://killawat.com",
   "author": "Rick Battagline <rick@battagline.com>",
   "license": "MIT",

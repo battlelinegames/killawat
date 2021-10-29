@@ -5,13 +5,17 @@
 const { TokenArray, funcSigTable, ParseTree,
   YELLOW, RED, CYAN, BRIGHT_GREEN, BRIGHT_BLUE,
   BRIGHT_YELLOW, BRIGHT_MAGENTA, BRIGHT_RED,
-  WasmModule, binaryen, globalSymbolTable, functionTable, BLUE, funcSymbolTable } = require('./shared.js')
+  WasmModule, binaryen, globalSymbolTable,
+  functionTable, funcSymbolMap, BLUE, funcSymbolTable } = require('./shared.js')
 const fs = require('fs');
 const { tokenize } = require("./tokenizer.js");
 //const { buildTables } = require('./tables.js');
 const { Module } = require('./module.js');
 const { Global } = require('./global.js');
 const { Func } = require('./func.js');
+const { Data } = require('./data.js');
+const { Memory } = require('./memory.js');
+const { Import } = require('./import.js');
 //const { genParseTree, parseTree } = require('./parse.js');
 
 function log_error(error_string) {
@@ -30,7 +34,7 @@ function log_support() {
   Contact Rick Battagline
   Twitter: @battagline
   https://wasmbook.com
-  kwc version 0.0.17
+  kwc version 0.0.18
   `);
 
 }
@@ -50,15 +54,20 @@ function compile(file_name, flags) {
 
   tokenize(code);
 
-  // THIS PARSE TREE IS GARBAGE!!!
-  //let parseTree = new ParseTree(0, TokenArray.length - 1);
   let module = new Module(TokenArray);
-  //WasmModule.addGlobal('$import_integer_32', binaryen.i32, false, 1);
+
   module.globalExpressionTokens.forEach(tokenArray => new Global(tokenArray.slice(2, -1)));
+
+  module.importExpressionTokens.forEach(tokenArray => new Import(tokenArray.slice(2, -1)));
 
   module.funcExpressionTokens.forEach(tokenArray => new Func(tokenArray.slice(1)));
 
-  //  buildTables(parseTree);
+  // data has to be done ahead of memory
+  module.dataExpressionTokens.forEach(tokenArray => new Data(tokenArray.slice(2)));
+
+  module.memoryExpressionTokens.forEach(tokenArray => new Memory(tokenArray.slice(2)));
+
+  //buildTables(parseTree);
 
   //console.log(globalSymbolTable);
 
