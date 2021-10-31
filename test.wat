@@ -5,6 +5,8 @@
   (data (i32.const 0) "abcd")
   (data (i32.const 0xff) "bcde")
 
+  (global $dump (mut i32) (i32.const 0))
+
   (func $loop_test (export "loop_test") (param $n i32)
     (result i32)
 
@@ -33,4 +35,12 @@
 
     local.get $factorial  ;; return $factorial to calling JavaScript
   )
+
+  (func $start_func
+    (global.set $dump
+      (call $loop_test (i32.const 5))
+    )
+  )
+
+  (start $start_func)
 )

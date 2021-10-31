@@ -1,3 +1,5 @@
+const { logError } = require("./shared");
+
 class Module {
   constructor(tokenArray) {
     this.funcExpressionTokens = [];
@@ -36,7 +38,11 @@ class Module {
             this.dataExpressionTokens.push(tokenArray.slice(i, endTokenIndex));
             break;
           case "start":
-            this.startExpressionTokens.push(tokenArray.slice(i, endTokenIndex));
+            if (this.startExpressionTokens.length !== 0) {
+              logError('start is defined more than once', this.startExpressionTokens[0]);
+              return;
+            }
+            this.startExpressionTokens = tokenArray.slice(i + 1, endTokenIndex);
             break;
           case "import":
             this.importExpressionTokens.push(tokenArray.slice(i, endTokenIndex));

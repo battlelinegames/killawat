@@ -12,7 +12,7 @@ class ImportTable {
     this.maxSize = maxSize;
 
     // Module#addTableImport(internalName: string, externalModuleName: string, externalBaseName: string): void
-    WasmModule.addTableImport(this.name,
+    WasmModule.addTableImport(this.name.slice(1),
       this.externalModuleName,
       this.externalBaseName
     );
@@ -35,11 +35,10 @@ class ImportFunc {
 
     // Module#addFunctionImport(internalName: string, externalModuleName: string, 
     //  externalBaseName: string, params: Type, results: Type):
-
-    WasmModule.addFunctionImport(this.name,
+    WasmModule.addFunctionImport(this.name.slice(1),
       this.externalModuleName,
       this.externalBaseName,
-      binaryen.createType(this.params.map(s => s.type)),
+      binaryen.createType(this.params),
       this.resultType
     );
   }
@@ -76,7 +75,7 @@ class ImportGlobal {
     globalSymbolTable.push(this);
     globalSymbolMap.set(this.id, this);
 
-    WasmModule.addGlobalImport(this.id,
+    WasmModule.addGlobalImport(this.id.slice(1),
       this.externalModuleName,
       this.externalBaseName,
       this.globalType
@@ -86,37 +85,29 @@ class ImportGlobal {
 
 class Import {
   constructor(tokenArray) {
-    // I THINK I WILL SLICE THESE TOKENS OUT
-    /*
-    if (tokenArray[0].type !== 'lp' ||
-      tokenArray[1].text !== 'import') {
-      logError('beginning of import is incorrect', tokenArray[0]);
-      return;
-    }
-    */
-    this.externalModuleName = tokenArray[0].value; //tokenArray[2].value;
-    this.externalBaseName = tokenArray[1].value; // tokenArray[3].value;
+    this.externalModuleName = tokenArray[0].value;
+    this.externalBaseName = tokenArray[1].value;
 
-    if (tokenArray[2].type !== 'lp') { // if you revert above swap 2 with 4
+    if (tokenArray[2].type !== 'lp') {
       logError(`expected '(' instead of ${tokenArray[2].text}`, tokenArray[2]);
       return;
     }
 
-    this.importTypeToken = tokenArray[3];//[5];
+    this.importTypeToken = tokenArray[3];
     this.importType = this.importTypeToken.text;
 
     if (this.importType === 'func') {
       this.funcParams = [];
-      this.parseFunc(tokenArray.slice(4, -2)); // if you revert above, the 4s will be 6s
+      this.parseFunc(tokenArray.slice(4, -1));
     }
     else if (this.importType === 'memory') {
-      this.parseMemory(tokenArray.slice(4, -2));
+      this.parseMemory(tokenArray.slice(4, -1));
     }
     else if (this.importType === 'global') {
-      this.parseGlobal(tokenArray.slice(4, -2));
+      this.parseGlobal(tokenArray.slice(4, -1));
     }
     else if (this.importType === 'table') {
-      this.parseTable(tokenArray.slice(4, -2));
+      this.parseTable(tokenArray.slice(4, -1));
     }
     else {
       logError(`unknown import type ${this.importType}`, this.importTypeToken);
@@ -131,7 +122,7 @@ class Import {
         logError(`expected valid Wasm type, instead found ${tokenArray[i].text}`, tokenArray[i]);
         return;
       }
-      this.funcParams.push[type];
+      this.funcParams.push(type);
     }
   }
 

@@ -34,7 +34,7 @@ function log_support() {
   Contact Rick Battagline
   Twitter: @battagline
   https://wasmbook.com
-  kwc version 0.0.18
+  kwc version 0.0.19
   `);
 
 }
@@ -62,10 +62,21 @@ function compile(file_name, flags) {
 
   module.funcExpressionTokens.forEach(tokenArray => new Func(tokenArray.slice(1)));
 
+  funcSymbolTable.forEach(func => { if (func.addFunction) { func.addFunction() } });
+
   // data has to be done ahead of memory
   module.dataExpressionTokens.forEach(tokenArray => new Data(tokenArray.slice(2)));
 
   module.memoryExpressionTokens.forEach(tokenArray => new Memory(tokenArray.slice(2)));
+
+  if (module.startExpressionTokens.length > 0) {
+    let startFunc = funcSymbolMap.get(module.startExpressionTokens[1].value);
+    WasmModule.setStart(startFunc.funcRef);
+  }
+
+  // table
+  // elem
+  // exports
 
   //buildTables(parseTree);
 
@@ -124,8 +135,14 @@ function compile(file_name, flags) {
   console.log(BRIGHT_GREEN, `
   Output File: ${file_out}`);
   if (!WasmModule.validate()) console.log("validation error");
-  fs.writeFileSync(file_out, WasmModule.emitBinary());
 
+  // newModule is a workaround for an issue I had where directly emitting the binary
+  // from WasmModule was screwing up the types for some reason.  I'm doing this until 
+  // I have more time to look into why that was happening.
+  let newModule = binaryen.parseText(WasmModule.emitText());
+  fs.writeFileSync(file_out, newModule.emitBinary());
+
+  //console.log(WasmModule.emitStackIR())
 }
 
 module.exports = { compile, log_error, log_support };

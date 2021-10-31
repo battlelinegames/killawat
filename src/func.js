@@ -1,6 +1,6 @@
 const { constMap, valtypeMap, logError, binaryen, funcSymbolTable,
   funcSymbolMap, unaryMap, binaryMap, WasmModule, globalSymbolTable,
-  globalSymbolMap, TokenArray } = require('./shared');
+  globalSymbolMap, TokenArray, storeMap, storeArray, loadMap, loadArray } = require('./shared');
 
 var blockCounter = 0;
 
@@ -40,11 +40,12 @@ class Func {
     this.body = [];
     this.bodyStack = [];
     this.blockArray = [];
+    this.tokenArray = tokenArray;
 
     let startToken = tokenArray[0];
-    let bodyStart = startToken.bodyStart - startToken.index;
+    this.bodyStart = startToken.bodyStart - startToken.index;
 
-    for (let i = 0; i < bodyStart; i++) {
+    for (let i = 0; i < this.bodyStart; i++) {
       let token = tokenArray[i];
 
       if (token.type === 'lp') {
@@ -59,14 +60,16 @@ class Func {
     this.index = funcSymbolTable.length;
     funcSymbolTable.push(this);
     funcSymbolMap.set(this.name, this);
+  }
 
+  addFunction() {
     // if I want to be able to call functions that are not declared yet I will need
     // to wait to parse the body until after all functions defined in the funcSymbolTable
-    this.parseBody(tokenArray.slice(bodyStart));
+    this.parseBody(this.tokenArray.slice(this.bodyStart));
     if (this.bodyStack.length > 0) {
       this.body.push(this.bodyStack.pop());
     }
-    WasmModule.addFunction(this.name,
+    this.funcRef = WasmModule.addFunction(this.name.slice(1),
       binaryen.createType(this.params.map(s => s.type)),
       this.result,
       this.locals.map(s => s.type),
@@ -236,8 +239,12 @@ class Func {
       let index = 0;
       let localSymbol = null;
       if (nextToken.type === 'int_literal') {
+        /*
         index = nextToken.value;
         localSymbol = this.getLocal(index);
+        */
+        logError(`killawat does not support index for local.get`, nextToken);
+        return;
       }
       else if (nextToken.type === 'name') {
         localSymbol = this.localMap.get(nextToken.text);
@@ -252,7 +259,9 @@ class Func {
     else if (token.text === 'global.get') {
       let globalSymbol = null;
       if (nextToken.type === 'int_literal') {
-        globalSymbol = globalSymbolTable[nextToken.value];
+        //globalSymbol = globalSymbolTable[nextToken.value];
+        logError(`killawat does not support index for global.get`, nextToken);
+        return;
       }
       else if (nextToken.type === 'name') {
         globalSymbol = globalSymbolMap.get(nextToken.text);
@@ -414,8 +423,13 @@ class Func {
         let localSymbol = null;
 
         if (nextToken.type === 'int_literal') {
+          /*
           index = nextToken.value;
           localSymbol = this.getLocal(index);
+          */
+          logError(`killawat does not support index for local.set`, nextToken);
+          return;
+
         }
         else if (nextToken.type === 'name') {
           localSymbol = this.localMap.get(nextToken.text);
@@ -431,7 +445,9 @@ class Func {
       else { // global.set
         let globalSymbol = null;
         if (nextToken.type === 'int_literal') {
-          globalSymbol = globalSymbolTable[nextToken.value];
+          //globalSymbol = globalSymbolTable[nextToken.value];
+          logError(`killawat does not support index for global.set`, nextToken);
+          return;
         }
         else if (nextToken.type === 'name') {
           globalSymbol = globalSymbolMap.get(nextToken.text);
@@ -441,7 +457,7 @@ class Func {
           return null;
         }
 
-        return new StackEntry(WasmModule.local.set(globalSymbol.id, sub.expression), binaryen.none);
+        return new StackEntry(WasmModule.global.set(globalSymbol.id.slice(1), sub.expression), binaryen.none);
 
       }
     }
@@ -516,10 +532,109 @@ class Func {
       }
 
       return new StackEntry(
-        WasmModule.call(func.name, callParams.map(se => se.expression), func.result),
+        WasmModule.call(func.name.slice(1), callParams.map(se => se.expression), func.result),
         func.result
       );
 
+    }
+    else if (startToken.type === 'load') {
+      // storeMap, storeArray, loadMap, loadArray
+      let i = 0;
+      let load = loadMap.get(startToken.text);
+
+      let lookAheadIndex = i + 1;
+      let lookAheadToken = tokenArray[lookAheadIndex];
+      let offset = 0;
+      let align = 0;
+
+      if (lookAheadToken.type === 'offset') {
+        offset = lookAheadToken.value;
+        i = lookAheadIndex;
+
+        lookAheadIndex += 1;
+        lookAheadToken = tokenArray[lookAheadIndex];
+        if (lookAheadToken.type === 'align') {
+          align = lookAheadToken.value;
+          i = lookAheadIndex;
+        }
+      }
+      else if (lookAheadToken.type === 'align') {
+        align = lookAheadToken.value;
+        i = lookAheadIndex;
+
+        lookAheadIndex += 1;
+        lookAheadToken = tokenArray[lookAheadIndex];
+        if (lookAheadToken.type === 'offset') {
+          offset = lookAheadToken.value;
+          i = lookAheadIndex;
+        }
+      }
+
+      if (tokenArray[i].type !== 'lp') {
+        logError(`load requires an expression for the address`, tokenArray[i]);
+        return;
+      }
+      let sub = this.bodyBranch(tokenArray.slice(i + 1, -1));
+
+      return new StackEntry(
+        load.loadFunc(offset, align, sub.expression),
+        load.resultType
+      );
+    }
+    else if (startToken.type === 'store') {
+      // storeMap, storeArray, loadMap, loadArray
+      let i = 0;
+      let store = storeMap.get(startToken.text);
+
+      let lookAheadIndex = i + 1;
+      let lookAheadToken = tokenArray[lookAheadIndex];
+      let offset = 0;
+      let align = 0;
+
+      if (lookAheadToken.type === 'offset') {
+        offset = lookAheadToken.value;
+        i = lookAheadIndex;
+
+        lookAheadIndex += 1;
+        lookAheadToken = tokenArray[lookAheadIndex];
+        if (lookAheadToken.type === 'align') {
+          align = lookAheadToken.value;
+          i = lookAheadIndex;
+        }
+      }
+      else if (lookAheadToken.type === 'align') {
+        align = lookAheadToken.value;
+        i = lookAheadIndex;
+
+        lookAheadIndex += 1;
+        lookAheadToken = tokenArray[lookAheadIndex];
+        if (lookAheadToken.type === 'offset') {
+          offset = lookAheadToken.value;
+          i = lookAheadIndex;
+        }
+      }
+
+      let lpTok = tokenArray[i];
+      if (lpTok.type !== 'lp') {
+        logError(`load requires an expression for the address`, tokenArray[i]);
+        return;
+      }
+
+      let ptr = this.bodyBranch(tokenArray.slice(i + 1, i + lpTok.endTokenOffset));
+      i += lpTok.endTokenOffset + 1;
+
+      lpTok = tokenArray[i];
+      if (lpTok.type !== 'lp') {
+        logError(`load requires an expression for the address`, tokenArray[i]);
+        return;
+      }
+
+      let setVal = this.bodyBranch(tokenArray.slice(i + 1, -1));
+
+      return new StackEntry(
+        store.storeFunc(offset, align, ptr.expression, setVal.expression),
+        store.resultType
+      );
     }
     else if (startToken.type === 'br') {
       if (nextToken.type !== 'name' &&
@@ -534,13 +649,17 @@ class Func {
         return;
       }
 
-      let name = nextToken.value;
+      let name = nextToken.value.slice(1);
       if (nextToken.type === 'int_literal') {
+        /*
         if (nextToken.value >= this.blockArray.length) {
           logError(`break depth of ${nextToken.value} is invalid`, nextToken);
           return;
         }
         name = this.blockArray[nextToken.value];
+        */
+        logError(`killawat does not support index for br`, nextToken);
+        return;
       }
 
       let br = null;
@@ -630,7 +749,7 @@ class Func {
         }
       }
       else if (token.type === 'binary') {
-        let binaryDef = binaryMap.get(startToken.text);
+        let binaryDef = binaryMap.get(token.text);
         let binaryFunc = binaryDef.binaryenFunc;
         let binaryResult = binaryDef.resultType;
 
@@ -665,13 +784,17 @@ class Func {
         }
         let sub = stack.pop();
 
-        if (startToken.text === 'local.set') {
+        if (token.text === 'local.set') {
           let index = 0;
           let localSymbol = null;
 
           if (nextToken.type === 'int_literal') {
+            logError(`killawat does not support index for local.set`, nextToken);
+            return;
+            /*
             index = nextToken.value;
             localSymbol = this.getLocal(index);
+            */
           }
           else if (nextToken.type === 'name') {
             localSymbol = this.localMap.get(nextToken.text);
@@ -682,12 +805,15 @@ class Func {
             return null;
           }
 
-          block.push(new StackEntry(WebAssembly.local.set(index, sub.expression), binaryen.none));
+          block.push(new StackEntry(WasmModule.local.set(index, sub.expression), binaryen.none));
         }
         else { // global.set
           let globalSymbol = null;
           if (nextToken.type === 'int_literal') {
-            globalSymbol = globalSymbolTable[nextToken.value];
+            //globalSymbol = globalSymbolTable[nextToken.value];
+            logError(`killawat does not support index for global.set`, nextToken);
+            return;
+
           }
           else if (nextToken.type === 'name') {
             globalSymbol = globalSymbolMap.get(nextToken.text);
@@ -697,7 +823,7 @@ class Func {
             return null;
           }
 
-          return new StackEntry(WebAssembly.local.set(globalSymbol.id, sub.expression), binaryen.none);
+          block.push(StackEntry(WasmModule.global.set(globalSymbol.id.slice(1), sub.expression), binaryen.none));
 
         }
       }
@@ -731,6 +857,86 @@ class Func {
         }
 
       }
+      else if (token.type === 'load') {
+        // storeMap, storeArray, loadMap, loadArray
+        let load = loadMap.get(token.text);
+
+        let lookAheadIndex = i + 1;
+        let lookAheadToken = tokenArray[lookAheadIndex];
+        let offset = 0;
+        let align = 0;
+
+        if (lookAheadToken.type === 'offset') {
+          offset = lookAheadToken.value;
+          i = lookAheadIndex;
+
+          lookAheadIndex += 1;
+          lookAheadToken = tokenArray[lookAheadIndex];
+          if (lookAheadToken.type === 'align') {
+            align = lookAheadToken.value;
+            i = lookAheadIndex;
+          }
+        }
+        else if (lookAheadToken.type === 'align') {
+          align = lookAheadToken.value;
+          i = lookAheadIndex;
+
+          lookAheadIndex += 1;
+          lookAheadToken = tokenArray[lookAheadIndex];
+          if (lookAheadToken.type === 'offset') {
+            offset = lookAheadToken.value;
+            i = lookAheadIndex;
+          }
+        }
+
+        stack.push(new StackEntry(
+          load.loadFunc(offset, align, stack.pop().expression),
+          load.resultType
+        ))
+
+      }
+      else if (token.type === 'store') {
+        // storeMap, storeArray, loadMap, loadArray
+        let i = 0;
+        let store = storeMap.get(startToken.text);
+
+        let lookAheadIndex = i + 1;
+        let lookAheadToken = tokenArray[lookAheadIndex];
+        let offset = 0;
+        let align = 0;
+
+        if (lookAheadToken.type === 'offset') {
+          offset = lookAheadToken.value;
+          i = lookAheadIndex;
+
+          lookAheadIndex += 1;
+          lookAheadToken = tokenArray[lookAheadIndex];
+          if (lookAheadToken.type === 'align') {
+            align = lookAheadToken.value;
+            i = lookAheadIndex;
+          }
+        }
+        else if (lookAheadToken.type === 'align') {
+          align = lookAheadToken.value;
+          i = lookAheadIndex;
+
+          lookAheadIndex += 1;
+          lookAheadToken = tokenArray[lookAheadIndex];
+          if (lookAheadToken.type === 'offset') {
+            offset = lookAheadToken.value;
+            i = lookAheadIndex;
+          }
+        }
+
+        let ptr = stack.pop();
+        let setVal = stack.pop();
+
+        block.push(new StackEntry(
+          store.storeFunc(offset, align, ptr.expression, setVal.expression),
+          store.resultType
+        ));
+
+      }
       else if (token.type === 'br') {
         if (nextToken.type !== 'name' &&
           nextToken.type !== 'int_literal') {
@@ -744,13 +950,18 @@ class Func {
           return;
         }
 
-        let name = nextToken.value;
+        let name = nextToken.value.slice(1);
+
         if (nextToken.type === 'int_literal') {
+          /*
           if (nextToken.value >= this.blockArray.length) {
             logError(`break depth of ${nextToken.value} is invalid`, nextToken);
             return;
           }
           name = this.blockArray[nextToken.value];
+          */
+          logError(`killawat does not support index for br`, nextToken);
+          return;
         }
 
         let br = null;
@@ -790,7 +1001,7 @@ class Func {
           let name = `$block_${this.blockArray.length}`;
           let subBlock = [];
           if (nextToken.type === 'name') {
-            name = nextToken.text;
+            name = nextToken.text.slice(1);
             i++;
           }
 
@@ -803,7 +1014,7 @@ class Func {
           if (stackLen < stack.length) {
             // if the lenght of the stack has grown move an item to the subBlock
             let se = stack.pop();
-            blockType = se.type;
+            blockType = se.type || binaryen.none;
             subBlock.push(se);
           }
 

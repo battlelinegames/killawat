@@ -182,8 +182,9 @@ const lexer = moo.compile({
       }
     }
   },
-  module_definitions: {
-    match: new RegExp(moduleDefinitions.join('|')), // module, func, global, etc.
+  set: {
+    // unary and binary values contain '.' (example i32.eqz) and must be escaped
+    match: /local\.set|global\.set/,
     value: s => {
       prevLP = false;
       return {
@@ -193,9 +194,56 @@ const lexer = moo.compile({
       }
     }
   },
-  set: {
-    // unary and binary values contain '.' (example i32.eqz) and must be escaped
-    match: /local\.set|global\.set/,
+  load: {
+    match: /(?:i32|f32|i64|f64)\.load(?:8|16|32)?(?:_s|_u)?/,
+    value: s => {
+      let type = typeMap.get(s.slice(0, 3));
+      let value = s.slice(8);
+      prevLP = false;
+      return {
+        level: level,
+        result: type,
+        value: value,
+      }
+    }
+  },
+  store: {
+    match: /(?:i32|f32|i64|f64)\.store(?:8|16|32)?/,
+    value: s => {
+      let type = typeMap.get(s.slice(0, 3));
+      let value = s.slice(9);
+      prevLP = false;
+      return {
+        level: level,
+        result: type,
+        value: value,
+      }
+    }
+  },
+  offset: {
+    match: /offset\s*=\s*\d+/,
+    value: s => {
+      let value = parseInt((s.match(/\d+/) || ['0']).at(0));
+      prevLP = false;
+      return {
+        level: level,
+        value: value,
+      }
+    }
+  },
+  align: {
+    match: /align\s*=\s*\d+/,
+    value: s => {
+      let value = parseInt((s.match(/\d+/) || ['0']).at(0));
+      prevLP = false;
+      return {
+        level: level,
+        value: value,
+      }
+    }
+  },
+  module_definitions: {
+    match: new RegExp(moduleDefinitions.join('|')), // module, func, global, etc.
     value: s => {
       prevLP = false;
       return {

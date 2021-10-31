@@ -29,15 +29,15 @@ class Global {
     }
 
     if (this.externalModuleName != null && this.externalBaseName != null) {
-      WasmModule.addGlobalImport(this.id,
+      WasmModule.addGlobalImport(this.id.slice(1),
         this.externalModuleName, this.externalBaseName,
         this.globalType);
     }
     else if (this.exportName != null) {
-      this.exportRef = WasmModule.addGlobalExport(this.id, this.exportName);
+      this.exportRef = WasmModule.addGlobalExport(this.id.slice(1), this.exportName);
     }
     else {
-      this.expression = WasmModule.addGlobal(this.id, this.globalType, this.mutable, this.initValue);
+      this.expression = WasmModule.addGlobal(this.id.slice(1), this.globalType, this.mutable, this.initValue);
     }
 
     globalSymbolTable.push(this);
@@ -58,7 +58,7 @@ class Global {
         logError(`mut must be followed by a type such as i32, f32, i64 or f64`, nextToken);
         return;
       }
-      this.globalType = nextToken.value;
+      this.mutable = nextToken.value;
     }
     else if (token.text === 'i32.const') {
       // int_literal, hex_literal, bin_literal
