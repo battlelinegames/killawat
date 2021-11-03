@@ -85,6 +85,8 @@ class ImportGlobal {
 
 class Import {
   constructor(tokenArray) {
+    this.meta = tokenArray.pop();
+
     this.externalModuleName = tokenArray[0].value;
     this.externalBaseName = tokenArray[1].value;
 

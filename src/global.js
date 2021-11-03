@@ -3,6 +3,8 @@ const { RED, logError, globalSymbolTable, globalSymbolMap, binaryen, WasmModule 
 
 class Global {
   constructor(tokenArray) {
+    this.meta = tokenArray.pop();
+
     this.index = globalSymbolTable.length;
     this.id = `$global_${this.index}`;
     this.globalType = binaryen.i32;

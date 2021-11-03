@@ -8,7 +8,7 @@ const { TokenArray, funcSigTable, ParseTree,
   WasmModule, binaryen, globalSymbolTable,
   functionTable, funcSymbolMap, BLUE, funcSymbolTable } = require('./shared.js')
 const fs = require('fs');
-const { tokenize } = require("./tokenizer.js");
+const { Tokenizer } = require("./tokenizer.js");
 //const { buildTables } = require('./tables.js');
 const { Module } = require('./module.js');
 const { Global } = require('./global.js');
@@ -34,7 +34,7 @@ function log_support() {
   Contact Rick Battagline
   Twitter: @battagline
   https://wasmbook.com
-  kwc version 0.0.19
+  kwc version 0.0.20
   `);
 
 }
@@ -47,18 +47,25 @@ let flags = {
   tokens: false
 }
 */
+
+// Don't forget about the misordering that can happen when a function doesn't return a value
+// you need to add variables to hold the items with values on the stack.
+
 function compile(file_name, flags) {
   console.log(BRIGHT_YELLOW, `compile ${file_name}`)
   var bytes = fs.readFileSync(file_name);
   var code = bytes.toString();
 
-  tokenize(code);
+  //tokenize(code);
+  let tokenizer = new Tokenizer(code, TokenArray);
 
-  let module = new Module(TokenArray);
+  //let processedTokens = new Preprocess(tokenizer).tokens;
 
-  module.globalExpressionTokens.forEach(tokenArray => new Global(tokenArray.slice(2, -1)));
+  let module = new Module(tokenizer, file_name);
 
-  module.importExpressionTokens.forEach(tokenArray => new Import(tokenArray.slice(2, -1)));
+  module.globalExpressionTokens.forEach(tokenArray => new Global(tokenArray.slice(2)));
+
+  module.importExpressionTokens.forEach(tokenArray => new Import(tokenArray.slice(2)));
 
   module.funcExpressionTokens.forEach(tokenArray => new Func(tokenArray.slice(1)));
 
@@ -66,6 +73,17 @@ function compile(file_name, flags) {
 
   // data has to be done ahead of memory
   module.dataExpressionTokens.forEach(tokenArray => new Data(tokenArray.slice(2)));
+  console.log('KILLAWAT DATA EXPRESSIONS');
+  module.dataExpressionTokens.forEach(
+    (tokenArray) => {
+      tokenArray.forEach(
+        t => {
+          if (t.type === 'string_literal') {
+            console.log(`value: ${t.value}`)
+          }
+        }
+      )
+    });
 
   module.memoryExpressionTokens.forEach(tokenArray => new Memory(tokenArray.slice(2)));
 

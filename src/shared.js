@@ -388,5 +388,20 @@ storeArray.forEach(s => { storeMap.set(s.text, s) });
 module.exports.storeArray = storeArray;
 module.exports.storeMap = storeMap;
 
-var dataTable = [];
+const dataTable = [];
 module.exports.dataTable = dataTable;
+
+const moduleStack = [];
+const importedModules = [];
+const moduleMap = new Map();
+
+module.exports.importedModules = importedModules;
+module.exports.moduleMap = moduleMap;
+module.exports.moduleStack = moduleStack;
+
+const memoryOffsetMap = new Map();
+module.exports.memoryOffsetMap = memoryOffsetMap;
+
+var main = {
+};
+module.exports.main = main;

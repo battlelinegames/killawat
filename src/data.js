@@ -1,7 +1,14 @@
-const { logError, dataTable, WasmModule } = require("./shared");
+const { logError, dataTable, WasmModule, memoryOffsetMap } = require("./shared");
 
 class Data {
   constructor(tokenArray) {
+    this.meta = tokenArray.pop();
+    this.memOffset = memoryOffsetMap.get(this.meta.file);
+    if (this.memOffset === null) {
+      logError(`data requires a memory expression`, tokenArray[0]);
+      return;
+    }
+
     for (let i = 0; i < tokenArray.length; i++) {
       let token = tokenArray[i];
 
@@ -31,12 +38,11 @@ class Data {
     }
     this.init();
     dataTable.push(this);
+    console.log(`DATA TABLE: `);
+    console.log(dataTable.at(-1));
   }
 
-  init(moduleOffset = 0) {
-    // data is a string, offset is a js number
-    this.moduleOffset = moduleOffset;
-
+  init() {
     // i think I need to go from an array to a Uint8Array
     if (this.jsData.slice(0, 3) === '\\0x') {
       this.dataArray = this.parseHexNumber(this.jsData.slice(4));
@@ -47,7 +53,7 @@ class Data {
     // when I get internet back on I cal look into how to convert a string into Uint8Array
     this.data = new Uint8Array(this.dataArray);
     // If I want to include modules I need to offset data
-    this.offset = WasmModule.i32.const(this.jsOffset + this.moduleOffset);
+    this.offset = WasmModule.i32.const(this.jsOffset + this.memOffset);
   }
 
   parseHexNumber(hex_string) {

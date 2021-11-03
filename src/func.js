@@ -30,6 +30,8 @@ class StackEntry {
 class Func {
   constructor(tokenArray) {
     //console.log(TokenArray[0]);
+    this.meta = tokenArray.pop();
+
     this.parseState = PARSE_STATE.START;
     this.name = `$func_${funcSymbolTable.length}`;
     this.exportName = null;

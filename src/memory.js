@@ -1,7 +1,15 @@
-const { RED, logError, memoryTable, memoryMap, binaryen, WasmModule, dataTable } = require('./shared');
+const { RED, logError, memoryTable, memoryMap, binaryen, main,
+  WasmModule, dataTable, memoryOffsetMap } = require('./shared');
 
 class Memory {
+  static CURRENT_PAGE_OFFSET = 0;
   constructor(tokenArray) {
+    this.meta = tokenArray.pop();
+    this.fileName = this.meta.file;
+    this.memOffset = Memory.CURRENT_PAGE_OFFSET << 16;
+
+    memoryOffsetMap.set(this.meta.file, this.memOffset);
+
     let currentIndex = 0;
     this.name = `mem_${memoryTable.length}`;
     this.index = memoryTable.length;
@@ -28,7 +36,15 @@ class Memory {
       this.maxSize = this.initialSize;
     }
 
-    WasmModule.setMemory(this.initialSize, this.maxSize, null, dataTable);
+    console.log('main module')
+    console.log(main.module)
+    if (main.module.fileName === this.fileName) {
+      WasmModule.setMemory(this.initialSize + Memory.CURRENT_PAGE_OFFSET,
+        this.maxSize + Memory.CURRENT_PAGE_OFFSET, null, dataTable);
+    }
+    else {
+      Memory.CURRENT_PAGE_OFFSET += this.initialSize;
+    }
   }
 }
 
