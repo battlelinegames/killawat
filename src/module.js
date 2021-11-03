@@ -1,4 +1,4 @@
-const { logError, moduleStack, importedModules, moduleMap, main } = require("./shared");
+const { logError, moduleStack, importedModules, moduleMap, main, YELLOW, GREEN } = require("./shared");
 const { Tokenizer } = require("./tokenizer");
 const fs = require('fs');
 
@@ -67,7 +67,7 @@ class Preprocess {
 
       let file_name = token.value;
       if (!moduleMap.get(file_name)) {
-        console.log(`FILE: ${file_name}`);
+        console.log(GREEN, `importing file: ${file_name}`);
         var bytes = fs.readFileSync(file_name);
         var code = bytes.toString();
 
@@ -78,7 +78,7 @@ class Preprocess {
         let module = new Module(tokenizer, file_name);
         this.importedModules.push(module);
 
-        if (main.module.fileName !== module.fileName) {
+        if (main.fileName !== module.fileName) {
           module.funcExpressionTokens.forEach(exp => main.module.funcExpressionTokens.push(exp));
           module.globalExpressionTokens.forEach(exp => main.module.globalExpressionTokens.push(exp));
           module.importExpressionTokens.forEach(exp => main.module.importExpressionTokens.push(exp));
@@ -86,7 +86,6 @@ class Preprocess {
           // how to tie data expressions to memory, how to tie memory to file
           module.memoryExpressionTokens.forEach(exp => main.module.memoryExpressionTokens.push(exp));
           module.dataExpressionTokens.forEach(exp => main.module.dataExpressionTokens.push(exp));
-
         }
 
         /*
@@ -131,6 +130,7 @@ class Module {
 
     if (main.module == null) {
       main.module = this;
+      main.fileName = fileName;
     }
 
     this.preprocessor = new Preprocess(tokenizer);
@@ -234,7 +234,7 @@ class Module {
             );
             break;
           default:
-            console.log(nextToken.text);
+          //console.log(nextToken.text);
         }
       }
     }

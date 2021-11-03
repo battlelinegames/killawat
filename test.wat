@@ -42,5 +42,10 @@
     )
   )
 
+  (func $loadtest2 (export "loadtest") (result i32)
+    i32.const 0x01
+    i32.load 
+  )
+
   (start $start_func)
 )

@@ -1,6 +1,6 @@
 const { constMap, valtypeMap, logError, binaryen, funcSymbolTable,
   funcSymbolMap, unaryMap, binaryMap, WasmModule, globalSymbolTable,
-  globalSymbolMap, TokenArray, storeMap, storeArray, loadMap, loadArray } = require('./shared');
+  globalSymbolMap, TokenArray, storeMap, storeArray, loadMap, loadArray, memoryOffsetMap } = require('./shared');
 
 var blockCounter = 0;
 
@@ -31,6 +31,8 @@ class Func {
   constructor(tokenArray) {
     //console.log(TokenArray[0]);
     this.meta = tokenArray.pop();
+
+    this.fileName = this.meta.file;
 
     this.parseState = PARSE_STATE.START;
     this.name = `$func_${funcSymbolTable.length}`;
@@ -577,6 +579,7 @@ class Func {
         return;
       }
       let sub = this.bodyBranch(tokenArray.slice(i + 1, -1));
+      offset += memoryOffsetMap.get(this.fileName);
 
       return new StackEntry(
         load.loadFunc(offset, align, sub.expression),
@@ -632,6 +635,7 @@ class Func {
       }
 
       let setVal = this.bodyBranch(tokenArray.slice(i + 1, -1));
+      offset += memoryOffsetMap.get(this.fileName);
 
       return new StackEntry(
         store.storeFunc(offset, align, ptr.expression, setVal.expression),
@@ -864,7 +868,7 @@ class Func {
         let load = loadMap.get(token.text);
 
         let lookAheadIndex = i + 1;
-        let lookAheadToken = tokenArray[lookAheadIndex];
+        let lookAheadToken = tokenArray[lookAheadIndex] || {};
         let offset = 0;
         let align = 0;
 
@@ -873,7 +877,7 @@ class Func {
           i = lookAheadIndex;
 
           lookAheadIndex += 1;
-          lookAheadToken = tokenArray[lookAheadIndex];
+          lookAheadToken = tokenArray[lookAheadIndex] || {};
           if (lookAheadToken.type === 'align') {
             align = lookAheadToken.value;
             i = lookAheadIndex;
@@ -884,12 +888,13 @@ class Func {
           i = lookAheadIndex;
 
           lookAheadIndex += 1;
-          lookAheadToken = tokenArray[lookAheadIndex];
+          lookAheadToken = tokenArray[lookAheadIndex] || {};
           if (lookAheadToken.type === 'offset') {
             offset = lookAheadToken.value;
             i = lookAheadIndex;
           }
         }
+        offset += memoryOffsetMap.get(this.fileName);
 
         stack.push(new StackEntry(
           load.loadFunc(offset, align, stack.pop().expression),
@@ -903,7 +908,7 @@ class Func {
         let store = storeMap.get(startToken.text);
 
         let lookAheadIndex = i + 1;
-        let lookAheadToken = tokenArray[lookAheadIndex];
+        let lookAheadToken = tokenArray[lookAheadIndex] || {};
         let offset = 0;
         let align = 0;
 
@@ -912,7 +917,7 @@ class Func {
           i = lookAheadIndex;
 
           lookAheadIndex += 1;
-          lookAheadToken = tokenArray[lookAheadIndex];
+          lookAheadToken = tokenArray[lookAheadIndex] || {};
           if (lookAheadToken.type === 'align') {
             align = lookAheadToken.value;
             i = lookAheadIndex;
@@ -923,7 +928,7 @@ class Func {
           i = lookAheadIndex;
 
           lookAheadIndex += 1;
-          lookAheadToken = tokenArray[lookAheadIndex];
+          lookAheadToken = tokenArray[lookAheadIndex] || {};
           if (lookAheadToken.type === 'offset') {
             offset = lookAheadToken.value;
             i = lookAheadIndex;
@@ -932,6 +937,7 @@ class Func {
 
         let ptr = stack.pop();
         let setVal = stack.pop();
+        offset += memoryOffsetMap.get(this.fileName);
 
         block.push(new StackEntry(
           store.storeFunc(offset, align, ptr.expression, setVal.expression),

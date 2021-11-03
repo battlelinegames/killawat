@@ -2,7 +2,7 @@
 
 // Object.freeze(obj);
 
-const { TokenArray, funcSigTable, ParseTree,
+const { TokenArray, funcSigTable, ParseTree, main,
   YELLOW, RED, CYAN, BRIGHT_GREEN, BRIGHT_BLUE,
   BRIGHT_YELLOW, BRIGHT_MAGENTA, BRIGHT_RED,
   WasmModule, binaryen, globalSymbolTable,
@@ -13,8 +13,7 @@ const { Tokenizer } = require("./tokenizer.js");
 const { Module } = require('./module.js');
 const { Global } = require('./global.js');
 const { Func } = require('./func.js');
-const { Data } = require('./data.js');
-const { Memory } = require('./memory.js');
+const { Memory, Data } = require('./memory.js');
 const { Import } = require('./import.js');
 //const { genParseTree, parseTree } = require('./parse.js');
 
@@ -34,7 +33,7 @@ function log_support() {
   Contact Rick Battagline
   Twitter: @battagline
   https://wasmbook.com
-  kwc version 0.0.21
+  kwc version 0.0.22
   `);
 
 }
@@ -69,11 +68,18 @@ function compile(file_name, flags) {
 
   module.funcExpressionTokens.forEach(tokenArray => new Func(tokenArray.slice(1)));
 
-  funcSymbolTable.forEach(func => { if (func.addFunction) { func.addFunction() } });
-
   // data has to be done ahead of memory
+  module.memoryExpressionTokens.forEach(tokenArray => {
+    let mem = new Memory(tokenArray.slice(2))
+    if (main.fileName !== mem.fileName) {
+      main.mem = mem;
+    }
+  });
   module.dataExpressionTokens.forEach(tokenArray => new Data(tokenArray.slice(2)));
-  module.memoryExpressionTokens.forEach(tokenArray => new Memory(tokenArray.slice(2)));
+
+  main.mem.Set();
+
+  funcSymbolTable.forEach(func => { if (func.addFunction) { func.addFunction() } });
 
   if (module.startExpressionTokens.length > 0) {
     let startFunc = funcSymbolMap.get(module.startExpressionTokens[1].value);
