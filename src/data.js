@@ -38,8 +38,6 @@ class Data {
     }
     this.init();
     dataTable.push(this);
-    console.log(`DATA TABLE: `);
-    console.log(dataTable.at(-1));
   }
 
   init() {

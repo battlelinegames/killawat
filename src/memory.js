@@ -36,8 +36,6 @@ class Memory {
       this.maxSize = this.initialSize;
     }
 
-    console.log('main module')
-    console.log(main.module)
     if (main.module.fileName === this.fileName) {
       WasmModule.setMemory(this.initialSize + Memory.CURRENT_PAGE_OFFSET,
         this.maxSize + Memory.CURRENT_PAGE_OFFSET, null, dataTable);

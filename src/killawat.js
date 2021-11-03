@@ -34,7 +34,7 @@ function log_support() {
   Contact Rick Battagline
   Twitter: @battagline
   https://wasmbook.com
-  kwc version 0.0.20
+  kwc version 0.0.21
   `);
 
 }
@@ -73,18 +73,6 @@ function compile(file_name, flags) {
 
   // data has to be done ahead of memory
   module.dataExpressionTokens.forEach(tokenArray => new Data(tokenArray.slice(2)));
-  console.log('KILLAWAT DATA EXPRESSIONS');
-  module.dataExpressionTokens.forEach(
-    (tokenArray) => {
-      tokenArray.forEach(
-        t => {
-          if (t.type === 'string_literal') {
-            console.log(`value: ${t.value}`)
-          }
-        }
-      )
-    });
-
   module.memoryExpressionTokens.forEach(tokenArray => new Memory(tokenArray.slice(2)));
 
   if (module.startExpressionTokens.length > 0) {
