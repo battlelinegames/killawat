@@ -45,6 +45,28 @@ class Tokenizer {
           }
         }
       },
+      macro_param: {
+        match: /!local|!const|!global|!body/,
+        value: s => {
+          this.prevLP = false;
+          return {
+            level: this.level,
+            result: null,
+            value: s,
+          }
+        }
+      },
+      macro_name: {
+        match: /![a-z_A-Z][a-zA-Z_0-9]*/,
+        value: s => {
+          this.prevLP = false;
+          return {
+            level: this.level,
+            result: null,
+            value: s,
+          }
+        }
+      },
       lp: {
         match: /\(/,
         value: s => {

@@ -405,3 +405,9 @@ module.exports.memoryOffsetMap = memoryOffsetMap;
 var main = {
 };
 module.exports.main = main;
+
+const macroTable = [];
+const macroMap = new Map();
+
+module.exports.macroTable = macroTable;
+module.exports.macroMap = macroMap;

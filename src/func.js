@@ -1,5 +1,5 @@
-const { constMap, valtypeMap, logError, binaryen, funcSymbolTable,
-  funcSymbolMap, unaryMap, binaryMap, WasmModule, globalSymbolTable,
+const { constMap, valtypeMap, logError, binaryen, funcSymbolTable, macroTable,
+  funcSymbolMap, unaryMap, binaryMap, WasmModule, globalSymbolTable, macroMap,
   globalSymbolMap, TokenArray, storeMap, storeArray, loadMap, loadArray, memoryOffsetMap } = require('./shared');
 
 var blockCounter = 0;
@@ -10,6 +10,12 @@ const PARSE_STATE = {
   RESULT: 2,
   LOCAL: 3,
   BODY: 4
+}
+
+const ParamType = {
+  LOCAL: 0,
+  GLOBAL: 1,
+  CONST: 2,
 }
 
 class SymbolTableEntry {
@@ -64,6 +70,47 @@ class Func {
     this.index = funcSymbolTable.length;
     funcSymbolTable.push(this);
     funcSymbolMap.set(this.name, this);
+  }
+
+  /*
+    this.name = token.value;
+    this.paramArray = [];
+    this.body = "";
+  */
+  expandMacros() {
+    let tokenArray = this.tokenArray.slice(this.bodyStart);
+
+    for (let i = 0; i < tokenArray.length; i++) {
+      let token = tokenArray[i];
+      if (token.type === 'macro_name') {
+        // macroMap, macroTable
+        let macro = macroMap.get(token.text);
+        let macroBody = [...macro.body];
+
+        for (let j = 0; j < macro.paramArray.length; j++) {
+          let pi = j + i + 1;
+          let replaceToken = macro.paramArray[j];
+          let paramToken = tokenArray[pi];
+          // int_literal, hex_literal, bin_literal, name
+          if (paramToken.type !== 'int_literal' &&
+            paramToken.type !== 'hex_literal' &&
+            paramToken.type !== 'bin_literal' &&
+            paramToken.type !== 'name') {
+            logError(`macro name must be followed by parameter values`, paramToken);
+            return;
+          }
+
+          for (let mbi = 0; mbi < macroBody.length; mbi++) {
+            let macroBodyToken = macroBody[mbi];
+            if (macroBodyToken.text === replaceToken.name) {
+              macroBody[mbi] = paramToken;
+            }
+          }
+          this.tokenArray.splice(this.bodyStart + i, macro.paramArray.length + 1, ...macroBody);
+          tokenArray = this.tokenArray.slice(this.bodyStart);
+        }
+      }
+    }
   }
 
   addFunction() {
@@ -781,7 +828,7 @@ class Func {
       }
       else if (token.type === 'set') {
         if (nextToken.type !== 'name' && nextToken.type !== 'int_literal') {
-          logError(`expected to see name or integer instead of '${nextToken.text}'`)
+          logError(`expected to see name or integer instead of '${nextToken.text}'`, token)
           return null;
         }
         if (stack.length === 0) {

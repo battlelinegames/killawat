@@ -42,9 +42,17 @@
     )
   )
 
-  (func $loadtest2 (export "loadtest") (result i32)
+  (func $loadtest2 (export "loadtest") (result i32) 
+  (local $x i32) 
+  (local $y i32)
     i32.const 0x01
     i32.load 
+    local.set $x
+    !inc $x ;; macro didn't do anything yet
+    local.get $x
+    local.set $y
+    !inc $y
+    local.get $y
   )
 
   (start $start_func)

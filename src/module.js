@@ -1,6 +1,79 @@
-const { logError, moduleStack, importedModules, moduleMap, main, YELLOW, GREEN } = require("./shared");
+const { logError, moduleStack, importedModules, moduleMap, main, YELLOW, GREEN, macroMap, macroTable } = require("./shared");
 const { Tokenizer } = require("./tokenizer");
 const fs = require('fs');
+
+const ParamType = {
+  LOCAL: 0,
+  GLOBAL: 1,
+  CONST: 2,
+}
+
+class Macro {
+  constructor(tokenArray) {
+    let token = tokenArray[0] || {};
+    if (token.type !== 'macro_name') {
+      logError(`!macro must be followed by a macro name`, token);
+      return;
+    }
+    this.name = token.value;
+    this.paramArray = [];
+    this.body = "";
+
+    for (let i = 1; i < tokenArray.length; i++) {
+      token = tokenArray[i];
+      let nextToken = tokenArray[i + 1] || {};
+      if (token.type === 'lp') {
+        if (nextToken.text === '!local' ||
+          nextToken.text === '!const' ||
+          nextToken.text === '!global') { // !local|!const|!global|!body
+          this.parseParam(tokenArray.slice(i + 1, i + token.endTokenOffset));
+        }
+        else if (nextToken.text === '!body') {
+          this.body = tokenArray.slice(i + 2, i + token.endTokenOffset);
+        }
+      }
+    }
+  }
+
+  parseParam(tokenArray) {
+    let token = tokenArray[0];
+    let nameToken = tokenArray[1] || {};
+    let typeToken = tokenArray[2] || {};
+
+    if (nameToken.type !== 'name') {
+      logError('!local must be followed by a name', nameToken);
+      return;
+    }
+    if (typeToken.type !== 'valtype') {
+      logError('!local must include a type', typeToken);
+      return;
+    }
+
+    if (token.text === '!local') {
+      this.paramArray.push({
+        paramType: ParamType.LOCAL,
+        name: nameToken.text,
+        type: typeToken.value,
+      });
+    }
+    else if (token.text === '!const') {
+      this.paramArray.push({
+        paramType: ParamType.CONST,
+        name: nameToken.text,
+        type: typeToken.value,
+      });
+    }
+    else if (token.text === '!global') {
+      this.paramArray.push({
+        paramType: ParamType.GLOBAL,
+        name: nameToken.text,
+        type: typeToken.value,
+      });
+    }
+  }
+
+
+}
 
 class Preprocess {
   constructor(tokenizer) {
@@ -87,20 +160,14 @@ class Preprocess {
           module.memoryExpressionTokens.forEach(exp => main.module.memoryExpressionTokens.push(exp));
           module.dataExpressionTokens.forEach(exp => main.module.dataExpressionTokens.push(exp));
         }
-
-        /*
-        this.tableExpressionTokens = [];
-        this.elemExpressionTokens = [];
-        this.startExpressionTokens = [];
-        this.exportExpressionTokens = [];
-        */
       }
-
     }
   }
 
-  processMacro(tokenArray, processedTokens) {
-
+  processMacro(tokenArray) {
+    let macro = new Macro(tokenArray);
+    macroMap.set(macro.name, macro);
+    macroTable.push(macro);
   }
 
   processInline(tokenArray, processedTokens) {

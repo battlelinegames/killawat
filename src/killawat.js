@@ -33,7 +33,7 @@ function log_support() {
   Contact Rick Battagline
   Twitter: @battagline
   https://wasmbook.com
-  kwc version 0.0.22
+  kwc version 0.0.23
   `);
 
 }
@@ -78,6 +78,8 @@ function compile(file_name, flags) {
   module.dataExpressionTokens.forEach(tokenArray => new Data(tokenArray.slice(2)));
 
   main.mem.Set();
+
+  funcSymbolTable.forEach(func => { if (func.expandMacros) { func.expandMacros() } });
 
   funcSymbolTable.forEach(func => { if (func.addFunction) { func.addFunction() } });
 

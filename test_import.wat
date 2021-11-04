@@ -7,4 +7,13 @@
     i32.const 0xff
     i32.load 
   )
+
+  (!macro !inc (!local $a i32)
+    (!body
+    local.get $a
+    i32.const 1
+    i32.add
+    local.set $a
+    )
+  )
 )
