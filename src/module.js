@@ -1,6 +1,7 @@
 const { logError, moduleStack, importedModules, moduleMap, main, YELLOW, GREEN, macroMap, macroTable } = require("./shared");
 const { Tokenizer } = require("./tokenizer");
 const fs = require('fs');
+const binaryen = require("binaryen");
 
 const ParamType = {
   LOCAL: 0,
@@ -76,11 +77,12 @@ class Macro {
 }
 
 class Preprocess {
-  constructor(tokenizer) {
+  constructor(tokenizer, fileName) {
     let tokenArray = tokenizer.tokenArray;
     let processedTokens = [];
     let processedIndex = 0;
     this.importedModules = [];
+    this.fileName = fileName;
 
     for (let i = 0; i < tokenArray.length; i++) {
       let prevToken = tokenArray[i - 1] || {};
@@ -95,7 +97,7 @@ class Preprocess {
               logError(`!merge preprocessor directive must be preceeded by '('`, prevToken);
               return;
             }
-            this.processImport(tokenArray.slice(i + 1, i + prevToken.endTokenOffset), processedTokens);
+            this.processImport(tokenArray.slice(i + 1, i + prevToken.endTokenOffset));
             break;
           case '!macro':
             if (prevToken.type !== 'lp') {
@@ -109,7 +111,7 @@ class Preprocess {
               logError(`!inline preprocessor directive must be preceeded by '('`, prevToken);
               return;
             }
-            this.processInline(tokenArray.slice(i + 1, i + prevToken.endTokenOffset), processedTokens);
+            this.processInline(tokenArray.slice(i + 1, i - 1 + prevToken.endTokenOffset), processedTokens);
             break;
           default:
             logError(`preprocessor directive ${token.text} found in wrong location`, token);
@@ -124,7 +126,7 @@ class Preprocess {
     this.tokens = processedTokens;
   }
 
-  processImport(tokenArray, processedTokens) {
+  processImport(tokenArray) {
     let i = 0;
 
     for (let i = 0; i < tokenArray.length; i++) {
@@ -170,8 +172,211 @@ class Preprocess {
     macroTable.push(macro);
   }
 
-  processInline(tokenArray, processedTokens) {
+  processInline(tokenArray) {
+    let tokenIndex = 0;
+    let token = tokenArray[tokenIndex];
+    let newGlobalTokens = [];
+    let newDataTokens = [];
+    let globalName = null;
+    let address = null;
+    let fileName = null;
 
+    if (token.type === 'name') {
+      globalName = token.value;
+      token = tokenArray[++tokenIndex];
+    }
+
+    if (token.type === 'int_literal' ||
+      token.type === 'hex_literal' ||
+      token.type === 'bin_literal') {
+      address = token.value;
+      token = tokenArray[++tokenIndex];
+    }
+
+    if (token.type !== 'string_literal') {
+      logError(`expected to find a file name`, token);
+      return;
+    }
+
+    fileName = token.value;
+    token = tokenArray[0];
+
+    // OKAY, SO THE WAY I DID THIS WAS STUPID
+    // I SHOULD BE ADDING THIS STUFF DIRECTLY INTO THE MODULE
+    // HOW DO I DO THAT?
+    if (globalName != null && address != null) {
+      newGlobalTokens.push(
+        {
+          type: 'lp',
+          value: '(',
+          text: '(',
+          index: token.index,
+          line: token.line,
+          col: token.col,
+          endTokenOffset: 8,
+        },
+        {
+          type: 'module_definitions',
+          value: 'global',
+          text: 'global',
+          index: token.index,
+          line: token.line,
+          col: token.col,
+        },
+        {
+          type: 'name',
+          value: globalName,
+          text: globalName,
+          index: token.index,
+          line: token.line,
+          col: token.col,
+        },
+        {
+          type: 'valtype',
+          value: binaryen.i32,
+          text: 'i32',
+          index: token.index,
+          line: token.line,
+          col: token.col,
+        },
+        {
+          type: 'lp',
+          value: '(',
+          text: '(',
+          index: token.index,
+          line: token.line,
+          col: token.col,
+          endTokenOffset: 3,
+        },
+        {
+          type: 'terminal',
+          value: 'i32.const',
+          text: 'i32.const',
+          index: token.index,
+          line: token.line,
+          col: token.col,
+        },
+        {
+          type: 'int_literal',
+          value: address,
+          text: address.toString(),
+          index: token.index,
+          line: token.line,
+          col: token.col,
+        },
+        {
+          type: 'rp',
+          value: ')',
+          text: ')',
+          index: token.index,
+          line: token.line,
+          col: token.col,
+        },
+        {
+          type: 'rp',
+          value: ')',
+          text: ')',
+          index: token.index,
+          line: token.line,
+          col: token.col,
+        },
+        {
+          type: 'meta',
+          value: 'meta',
+          text: 'meta',
+          file: this.fileName
+        });
+      main.module.globalExpressionTokens.push(newGlobalTokens);
+      //console.log(main.module.globalExpressionTokens)
+    }
+
+    if (address === null) {
+      logError(`!inline requires an address`, token);
+      return;
+    }
+
+    let data = fs.readFileSync(fileName, { encoding: "binary" });
+    let dataString = '';
+
+    for (let i = 0; i < data.length; i++) {
+      dataString += '\\' + data[i].charCodeAt(0).toString(16).padStart(2, '0');
+    }
+
+    newDataTokens.push(
+      {
+        type: 'lp',
+        value: '(',
+        text: '(',
+        index: token.index,
+        line: token.line,
+        col: token.col,
+        endTokenOffset: 7,
+      },
+      {
+        type: 'module_definitions',
+        value: 'data',
+        text: 'data',
+        index: token.index,
+        line: token.line,
+        col: token.col,
+      },
+      {
+        type: 'lp',
+        value: '(',
+        text: '(',
+        index: token.index,
+        line: token.line,
+        col: token.col,
+        endTokenOffset: 3,
+      },
+      {
+        type: 'terminal',
+        value: 'i32.const',
+        text: 'i32.const',
+        index: token.index,
+        line: token.line,
+        col: token.col,
+      },
+      {
+        type: 'int_literal',
+        value: address,
+        text: address.toString(),
+        index: token.index,
+        line: token.line,
+        col: token.col,
+      },
+      {
+        type: 'rp',
+        value: ')',
+        text: ')',
+        index: token.index,
+        line: token.line,
+        col: token.col,
+      },
+      {
+        type: 'string_literal',
+        value: dataString,
+        text: `"${dataString}"`,
+        index: token.index,
+        line: token.line,
+        col: token.col,
+      },
+      {
+        type: 'rp',
+        value: ')',
+        text: ')',
+        index: token.index,
+        line: token.line,
+        col: token.col,
+      },
+      {
+        type: 'meta',
+        value: 'meta',
+        text: 'meta',
+        file: this.fileName
+      });
+
+    main.module.dataExpressionTokens.push(newDataTokens);
   }
 }
 
@@ -200,7 +405,7 @@ class Module {
       main.fileName = fileName;
     }
 
-    this.preprocessor = new Preprocess(tokenizer);
+    this.preprocessor = new Preprocess(tokenizer, fileName);
     this.tokenArray = this.preprocessor.tokens;
     this.unprocessedTokens = tokenizer.tokenArray;
 
@@ -212,7 +417,7 @@ class Module {
       let nextToken = this.tokenArray[i + 1];
 
       if (token.level === 2 && token.type === 'lp') {
-        let endTokenIndex = token.endTokenIndex;
+        let endTokenIndex = i + token.endTokenOffset;
         switch (nextToken.text) {
           case "func":
             this.funcExpressionTokens.push(

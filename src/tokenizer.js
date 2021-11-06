@@ -496,13 +496,13 @@ class Tokenizer {
           }
           else if (tok.type === 'lp') {
             if (this.isBody(this.tokenArray[j + 1])) {
-              func_tok.bodyStart = j;
+              func_tok.bodyStartOffset = j - i;
               break;
             }
             j = tok.endTokenIndex;
           }
           else {
-            func_tok.bodyStart = j;
+            func_tok.bodyStartOffset = j - i;
             break;
           }
         }

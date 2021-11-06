@@ -4,14 +4,439 @@
 ========================================================
 
 [92mcompile test.wat[37m
-FILE: test_import.wat
-"test_import.wat"
-[93m
-  Output File: test.wasm[37m
-[36m
-  Need help?  
-  Contact Rick Battagline
-  Twitter: @battagline
-  https://wasmbook.com
-  kwc version 0.0.21
+
+        lpTok
+          index: 9
+          endTokenOffset: 4
+          nextToken: param
+          thirdToken: i32
+        
+
+        lpTok
+          index: 6
+          endTokenOffset: 8
+          nextToken: func
+          thirdToken: $log
+        
+
+        lpTok
+          index: 2
+          endTokenOffset: 13
+          nextToken: import
+          thirdToken: "env"
+        
+
+        lpTok
+          index: 16
+          endTokenOffset: 3
+          nextToken: !merge
+          thirdToken: "test_import.wat"
+        
+
+        lpTok
+          index: 20
+          endTokenOffset: 3
+          nextToken: memory
+          thirdToken: 1
+        
+
+        lpTok
+          index: 26
+          endTokenOffset: 3
+          nextToken: i32.const
+          thirdToken: 0
+        
+
+        lpTok
+          index: 24
+          endTokenOffset: 7
+          nextToken: data
+          thirdToken: (
+        
+
+        lpTok
+          index: 34
+          endTokenOffset: 3
+          nextToken: i32.const
+          thirdToken: 0xff
+        
+
+        lpTok
+          index: 32
+          endTokenOffset: 7
+          nextToken: data
+          thirdToken: (
+        
+
+        lpTok
+          index: 40
+          endTokenOffset: 5
+          nextToken: !inline
+          thirdToken: $filedata
+        
+
+        lpTok
+          index: 49
+          endTokenOffset: 3
+          nextToken: mut
+          thirdToken: i32
+        
+
+        lpTok
+          index: 53
+          endTokenOffset: 3
+          nextToken: i32.const
+          thirdToken: 0
+        
+
+        lpTok
+          index: 46
+          endTokenOffset: 11
+          nextToken: global
+          thirdToken: $dump
+        
+
+        lpTok
+          index: 61
+          endTokenOffset: 3
+          nextToken: export
+          thirdToken: "loop_test"
+        
+
+        lpTok
+          index: 65
+          endTokenOffset: 4
+          nextToken: param
+          thirdToken: $n
+        
+
+        lpTok
+          index: 70
+          endTokenOffset: 3
+          nextToken: result
+          thirdToken: i32
+        
+
+        lpTok
+          index: 74
+          endTokenOffset: 4
+          nextToken: local
+          thirdToken: $i
+        
+
+        lpTok
+          index: 79
+          endTokenOffset: 4
+          nextToken: local
+          thirdToken: $factorial
+        
+
+        lpTok
+          index: 87
+          endTokenOffset: 3
+          nextToken: i32.const
+          thirdToken: 1
+        
+
+        lpTok
+          index: 84
+          endTokenOffset: 7
+          nextToken: local.set
+          thirdToken: $factorial
+        
+
+        lpTok
+          index: 103
+          endTokenOffset: 3
+          nextToken: local.get
+          thirdToken: $i
+        
+
+        lpTok
+          index: 107
+          endTokenOffset: 3
+          nextToken: i32.const
+          thirdToken: 1
+        
+
+        lpTok
+          index: 101
+          endTokenOffset: 10
+          nextToken: i32.add
+          thirdToken: (
+        
+
+        lpTok
+          index: 98
+          endTokenOffset: 14
+          nextToken: local.set
+          thirdToken: $i
+        
+
+        lpTok
+          index: 118
+          endTokenOffset: 3
+          nextToken: local.get
+          thirdToken: $i
+        
+
+        lpTok
+          index: 122
+          endTokenOffset: 3
+          nextToken: local.get
+          thirdToken: $factorial
+        
+
+        lpTok
+          index: 116
+          endTokenOffset: 10
+          nextToken: i32.mul
+          thirdToken: (
+        
+
+        lpTok
+          index: 113
+          endTokenOffset: 14
+          nextToken: local.set
+          thirdToken: $factorial
+        
+
+        lpTok
+          index: 131
+          endTokenOffset: 3
+          nextToken: local.get
+          thirdToken: $i
+        
+
+        lpTok
+          index: 135
+          endTokenOffset: 3
+          nextToken: local.get
+          thirdToken: $factorial
+        
+
+        lpTok
+          index: 128
+          endTokenOffset: 11
+          nextToken: call
+          thirdToken: $log
+        
+
+        lpTok
+          index: 145
+          endTokenOffset: 3
+          nextToken: local.get
+          thirdToken: $i
+        
+
+        lpTok
+          index: 149
+          endTokenOffset: 3
+          nextToken: local.get
+          thirdToken: $n
+        
+
+        lpTok
+          index: 143
+          endTokenOffset: 10
+          nextToken: i32.eq
+          thirdToken: (
+        
+
+        lpTok
+          index: 140
+          endTokenOffset: 14
+          nextToken: br_if
+          thirdToken: $break
+        
+
+        lpTok
+          index: 95
+          endTokenOffset: 62
+          nextToken: block
+          thirdToken: $break
+        
+
+        lpTok
+          index: 92
+          endTokenOffset: 66
+          nextToken: loop
+          thirdToken: $continue
+        
+
+        lpTok
+          index: 58
+          endTokenOffset: 103
+          nextToken: func
+          thirdToken: $loop_test
+        
+
+        lpTok
+          index: 171
+          endTokenOffset: 3
+          nextToken: i32.const
+          thirdToken: 5
+        
+
+        lpTok
+          index: 168
+          endTokenOffset: 7
+          nextToken: call
+          thirdToken: $loop_test
+        
+
+        lpTok
+          index: 165
+          endTokenOffset: 11
+          nextToken: global.set
+          thirdToken: $dump
+        
+
+        lpTok
+          index: 162
+          endTokenOffset: 15
+          nextToken: func
+          thirdToken: $start_func
+        
+
+        lpTok
+          index: 181
+          endTokenOffset: 3
+          nextToken: export
+          thirdToken: "loadtest"
+        
+
+        lpTok
+          index: 185
+          endTokenOffset: 3
+          nextToken: result
+          thirdToken: i32
+        
+
+        lpTok
+          index: 189
+          endTokenOffset: 4
+          nextToken: local
+          thirdToken: $x
+        
+
+        lpTok
+          index: 194
+          endTokenOffset: 4
+          nextToken: local
+          thirdToken: $y
+        
+
+        lpTok
+          index: 178
+          endTokenOffset: 36
+          nextToken: func
+          thirdToken: $loadtest2
+        
+
+        lpTok
+          index: 215
+          endTokenOffset: 3
+          nextToken: start
+          thirdToken: $start_func
+        
+
+        lpTok
+          index: 0
+          endTokenOffset: 219
+          nextToken: module
+          thirdToken: (
+        
+[32mimporting file: test_import.wat[37m
+
+        lpTok
+          index: 2
+          endTokenOffset: 3
+          nextToken: memory
+          thirdToken: 1
+        
+
+        lpTok
+          index: 8
+          endTokenOffset: 3
+          nextToken: i32.const
+          thirdToken: 0
+        
+
+        lpTok
+          index: 6
+          endTokenOffset: 7
+          nextToken: data
+          thirdToken: (
+        
+
+        lpTok
+          index: 16
+          endTokenOffset: 3
+          nextToken: i32.const
+          thirdToken: 0xff
+        
+
+        lpTok
+          index: 14
+          endTokenOffset: 7
+          nextToken: data
+          thirdToken: (
+        
+
+        lpTok
+          index: 25
+          endTokenOffset: 3
+          nextToken: export
+          thirdToken: "loadtest"
+        
+
+        lpTok
+          index: 29
+          endTokenOffset: 3
+          nextToken: result
+          thirdToken: i32
+        
+
+        lpTok
+          index: 22
+          endTokenOffset: 14
+          nextToken: func
+          thirdToken: $loadtest
+        
+
+        lpTok
+          index: 40
+          endTokenOffset: 4
+          nextToken: !local
+          thirdToken: $a
+        
+
+        lpTok
+          index: 45
+          endTokenOffset: 9
+          nextToken: !body
+          thirdToken: local.get
+        
+
+        lpTok
+          index: 37
+          endTokenOffset: 18
+          nextToken: !macro
+          thirdToken: !inc
+        
+
+        lpTok
+          index: 0
+          endTokenOffset: 56
+          nextToken: module
+          thirdToken: (
+        
+[31m
+  global subexpression not followed by a valid keyword.
   [37m
+[31m
+    expected to find 'i32.const', instead found 'i32': "i32"
+      line: 7 
+      column: 12
+    [37m

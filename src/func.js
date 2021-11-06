@@ -1,6 +1,7 @@
 const { constMap, valtypeMap, logError, binaryen, funcSymbolTable, macroTable,
   funcSymbolMap, unaryMap, binaryMap, WasmModule, globalSymbolTable, macroMap,
-  globalSymbolMap, TokenArray, storeMap, storeArray, loadMap, loadArray, memoryOffsetMap } = require('./shared');
+  globalSymbolMap, TokenArray, storeMap, storeArray, loadMap, loadArray,
+  memoryOffsetMap } = require('./shared');
 
 var blockCounter = 0;
 
@@ -53,9 +54,9 @@ class Func {
     this.tokenArray = tokenArray;
 
     let startToken = tokenArray[0];
-    this.bodyStart = startToken.bodyStart - startToken.index;
+    this.bodyStartOffset = startToken.bodyStartOffset; // - startToken.index;
 
-    for (let i = 0; i < this.bodyStart; i++) {
+    for (let i = 0; i < this.bodyStartOffset; i++) {
       let token = tokenArray[i];
 
       if (token.type === 'lp') {
@@ -78,7 +79,7 @@ class Func {
     this.body = "";
   */
   expandMacros() {
-    let tokenArray = this.tokenArray.slice(this.bodyStart);
+    let tokenArray = this.tokenArray.slice(this.bodyStartOffset);
 
     for (let i = 0; i < tokenArray.length; i++) {
       let token = tokenArray[i];
@@ -106,8 +107,8 @@ class Func {
               macroBody[mbi] = paramToken;
             }
           }
-          this.tokenArray.splice(this.bodyStart + i, macro.paramArray.length + 1, ...macroBody);
-          tokenArray = this.tokenArray.slice(this.bodyStart);
+          this.tokenArray.splice(this.bodyStartOffset + i, macro.paramArray.length + 1, ...macroBody);
+          tokenArray = this.tokenArray.slice(this.bodyStartOffset);
         }
       }
     }
@@ -116,7 +117,7 @@ class Func {
   addFunction() {
     // if I want to be able to call functions that are not declared yet I will need
     // to wait to parse the body until after all functions defined in the funcSymbolTable
-    this.parseBody(this.tokenArray.slice(this.bodyStart));
+    this.parseBody(this.tokenArray.slice(this.bodyStartOffset));
     if (this.bodyStack.length > 0) {
       this.body.push(this.bodyStack.pop());
     }

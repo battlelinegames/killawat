@@ -47,8 +47,11 @@ class Global {
   }
 
   subExpression(tokenArray) {
+    //console.log('global subexpression:')
+    //console.log(tokenArray)
     if (tokenArray.length < 2) {
       logError(`global subexpression not followed by a valid keyword`, tokenArray[0]);
+      //console.log(tokenArray);
       return;
     }
 
