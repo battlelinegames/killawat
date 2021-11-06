@@ -35,7 +35,18 @@ class Tokenizer {
       },
       // ANYTHING THAT INCLUDES A LEFT OR RIGHT PAREN MUST COME IN FRONT OF THIS
       preprocess: {
-        match: /!merge|!macro|!module|!private|!inline|!address|!len|!process|##|#/,
+        match: /!merge|!macro|!module|!private|!inline|!address|!len|!process/,
+        value: s => {
+          this.prevLP = false;
+          return {
+            level: this.level,
+            result: null,
+            value: s,
+          }
+        }
+      },
+      magic_chars: {
+        match: /##|#|=/,
         value: s => {
           this.prevLP = false;
           return {

@@ -111,6 +111,66 @@ class Func {
           tokenArray = this.tokenArray.slice(this.bodyStartOffset);
         }
       }
+      else if (token.type === 'magic_chars') {
+        let nextToken = tokenArray[i + 1] || {};
+        if (token.text === '##') {
+          if (nextToken.type === 'name') {
+            token.text = 'global.get';
+            token.value = 'global.get';
+            token.type = 'terminal';
+          }
+          else if (nextToken.type === 'float_literal') {
+            token.text = 'f64.const';
+            token.value = 'f64.const';
+            token.type = 'terminal';
+          }
+          else if (nextToken.type === 'int_literal' ||
+            nextToken.type === 'hex_literal' ||
+            nextToken.type === 'bin_literal') {
+            token.text = 'i64.const';
+            token.value = 'i64.const';
+            token.type = 'terminal';
+          }
+          else {
+            logError("unexpected token following '##", nextToken);
+            return;
+          }
+        }
+        else if (token.text === '#') {
+          if (nextToken.type === 'name') {
+            token.text = 'local.get';
+            token.value = 'local.get';
+            token.type = 'terminal';
+          }
+          else if (nextToken.type === 'float_literal') {
+            token.text = 'f32.const';
+            token.value = 'f32.const';
+            token.type = 'terminal';
+          }
+          else if (nextToken.type === 'int_literal' ||
+            nextToken.type === 'hex_literal' ||
+            nextToken.type === 'bin_literal') {
+            token.text = 'i32.const';
+            token.value = 'i32.const';
+            token.type = 'terminal';
+          }
+          else {
+            logError("unexpected token following '#", nextToken);
+            return;
+          }
+        }
+        else if (token.text === '=') {
+          if (nextToken.type !== 'name') {
+            logError("The '=' character must be followed by a variable name", nextToken);
+            return;
+          }
+          token.text = 'local.set';
+          token.value = 'local.set';
+          token.type = 'set';
+        }
+
+        // need to add global.set at some point
+      }
     }
   }
 
@@ -833,7 +893,7 @@ class Func {
           return null;
         }
         if (stack.length === 0) {
-          logError(`no values to pop from stack`, startToken);
+          logError(`no values to pop from stack`, token);
           return null;
         }
         let sub = stack.pop();
