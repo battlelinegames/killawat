@@ -4,7 +4,7 @@
   (memory 1)
   (data (i32.const 0) "abcd")
   (data (i32.const 0xff) "bcde")
-  (!inline $filedata 512 "test.png")
+  (!inline $filedata 512 "test.png" (!process "test.js"))
   (global $dump (mut i32) (i32.const 0))
 
   (func $loop_test (export "loop_test") (param $n i32)
@@ -37,12 +37,13 @@
   )
 
   (func $start_func
+    ;;(call $log (i32.const 1) (i32.const 2))
     (global.set $dump
       (call $loop_test (i32.const 5))
     )
   )
 
-  (func $loadtest2 (export "loadtest") (result i32) 
+  (func $NoExport (result i32) 
     (local $x i32) 
     (local $y i32)
     i32.const 0x01

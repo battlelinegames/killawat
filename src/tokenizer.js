@@ -29,6 +29,14 @@ class Tokenizer {
 
     this.lexer = moo.compile({
       ws: /[ \t]+/,
+      glue: {
+        match: /\(!glue(?:\n|.)*end!\)/,
+        value: s => s.slice(6, -9)
+      },
+      extension: {
+        match: /!ext-[a-z_A-Z][a-zA-Z_0-9]*/,
+        value: s => s.slice(5)
+      },
       comment: {
         match: /(?:\(;(?:\n|.)*;\))|(?:;;[^\n]*)/, // /;;[^\n]*/,
         value: s => s.substring(1)

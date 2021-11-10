@@ -33,7 +33,7 @@ function log_support() {
   Contact Rick Battagline
   Twitter: @battagline
   https://wasmbook.com
-  kwc version 0.0.28
+  kwc version 0.0.29
   `);
 
 }
@@ -155,7 +155,8 @@ function compile(file_name, flags) {
   // newModule is a workaround for an issue I had where directly emitting the binary
   // from WasmModule was screwing up the types for some reason.  I'm doing this until 
   // I have more time to look into why that was happening.
-  //console.log(WasmModule.emitText());
+  WasmModule.optimize();
+  console.log(WasmModule.emitText());
   let newModule = binaryen.parseText(WasmModule.emitText());
   fs.writeFileSync(file_out, newModule.emitBinary());
 

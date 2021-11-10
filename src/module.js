@@ -113,6 +113,12 @@ class Preprocess {
             }
             this.processInline(tokenArray.slice(i + 1, i - 1 + prevToken.endTokenOffset), processedTokens);
             break;
+          case '!process':
+            if (prevToken.type !== 'lp') {
+              logError(`!process preprocessor directive must be preceeded by '('`, prevToken);
+              return;
+            }
+            break;
           default:
             logError(`preprocessor directive ${token.text} found in wrong location`, token);
         }
@@ -199,11 +205,30 @@ class Preprocess {
     }
 
     fileName = token.value;
+    this.preprocessFunc = null;
+
+    token = tokenArray[++tokenIndex] || {};
+    if (token.type === 'lp') {
+      // is the next token !process
+      let processToken = tokenArray[++tokenIndex] || {};
+      let fileNameToken = tokenArray[++tokenIndex] || {};
+      if (processToken.text === '!process' &&
+        fileNameToken.type === 'string_literal') {
+        console.log(`dir: ${__dirname}`);
+        if (fileNameToken.value.substring(0, 2) === './') {
+          this.preprocessFunc = require(`${process.cwd()}/${fileNameToken.value.slice(2)}`);
+        }
+        else {
+          this.preprocessFunc = require(`${__dirname}/preprocess/${fileNameToken.value}`);
+        }
+      }
+
+    }
+
+
+
     token = tokenArray[0];
 
-    // OKAY, SO THE WAY I DID THIS WAS STUPID
-    // I SHOULD BE ADDING THIS STUFF DIRECTLY INTO THE MODULE
-    // HOW DO I DO THAT?
     if (globalName != null && address != null) {
       newGlobalTokens.push(
         {
@@ -296,6 +321,10 @@ class Preprocess {
     }
 
     let data = fs.readFileSync(fileName, { encoding: "binary" });
+    if (this.preprocessFunc != null) {
+      data = this.preprocessFunc(data);
+    }
+
     let dataString = '';
 
     for (let i = 0; i < data.length; i++) {

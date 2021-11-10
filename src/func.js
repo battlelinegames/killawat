@@ -187,6 +187,10 @@ class Func {
       this.locals.map(s => s.type),
       WasmModule.block(null, this.body.map(se => se.expression), this.result)
     );
+
+    if (this.exportName != null) {
+      WasmModule.addFunctionExport(this.name.slice(1), this.exportName);
+    }
   }
 
   static getFuncSymbol(idToken) {
