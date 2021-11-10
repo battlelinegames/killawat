@@ -1,0 +1,1096 @@
+{
+  "frames": {
+    "AofC.psd": {
+      "frame": {
+        "x": 643,
+        "y": 963,
+        "w": 135,
+        "h": 132
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 135,
+        "h": 132
+      },
+      "sourceSize": {
+        "w": 135,
+        "h": 132
+      }
+    },
+    "AofD.psd": {
+      "frame": {
+        "x": 526,
+        "y": 984,
+        "w": 113,
+        "h": 160
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 113,
+        "h": 160
+      },
+      "sourceSize": {
+        "w": 113,
+        "h": 160
+      }
+    },
+    "AofH.psd": {
+      "frame": {
+        "x": 645,
+        "y": 1099,
+        "w": 118,
+        "h": 115
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 118,
+        "h": 115
+      },
+      "sourceSize": {
+        "w": 118,
+        "h": 115
+      }
+    },
+    "AofS.psd": {
+      "frame": {
+        "x": 782,
+        "y": 963,
+        "w": 109,
+        "h": 137
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 109,
+        "h": 137
+      },
+      "sourceSize": {
+        "w": 109,
+        "h": 137
+      }
+    },
+    "blank_cell.psd": {
+      "frame": {
+        "x": 3,
+        "y": 1025,
+        "w": 194,
+        "h": 279
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 194,
+        "h": 279
+      },
+      "sourceSize": {
+        "w": 194,
+        "h": 279
+      }
+    },
+    "ButtonAgreement.psd": {
+      "frame": {
+        "x": 697,
+        "y": 931,
+        "w": 161,
+        "h": 28
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 161,
+        "h": 28
+      },
+      "sourceSize": {
+        "w": 161,
+        "h": 28
+      }
+    },
+    "ButtonBack.psd": {
+      "frame": {
+        "x": 492,
+        "y": 1493,
+        "w": 215,
+        "h": 87
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 215,
+        "h": 87
+      },
+      "sourceSize": {
+        "w": 215,
+        "h": 87
+      }
+    },
+    "ButtonHome.psd": {
+      "frame": {
+        "x": 767,
+        "y": 1104,
+        "w": 110,
+        "h": 110
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 110,
+        "h": 110
+      },
+      "sourceSize": {
+        "w": 110,
+        "h": 110
+      }
+    },
+    "ButtonMore.psd": {
+      "frame": {
+        "x": 622,
+        "y": 1279,
+        "w": 110,
+        "h": 110
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 110,
+        "h": 110
+      },
+      "sourceSize": {
+        "w": 110,
+        "h": 110
+      }
+    },
+    "ButtonNew.psd": {
+      "frame": {
+        "x": 736,
+        "y": 1279,
+        "w": 110,
+        "h": 110
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 110,
+        "h": 110
+      },
+      "sourceSize": {
+        "w": 110,
+        "h": 110
+      }
+    },
+    "ButtonPrivacy.psd": {
+      "frame": {
+        "x": 622,
+        "y": 1393,
+        "w": 117,
+        "h": 28
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 117,
+        "h": 28
+      },
+      "sourceSize": {
+        "w": 117,
+        "h": 28
+      }
+    },
+    "ButtonRules.psd": {
+      "frame": {
+        "x": 329,
+        "y": 1553,
+        "w": 84,
+        "h": 28
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 84,
+        "h": 28
+      },
+      "sourceSize": {
+        "w": 84,
+        "h": 28
+      }
+    },
+    "ButtonSettings.psd": {
+      "frame": {
+        "x": 743,
+        "y": 1393,
+        "w": 110,
+        "h": 110
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 110,
+        "h": 110
+      },
+      "sourceSize": {
+        "w": 110,
+        "h": 110
+      }
+    },
+    "ButtonUndo.psd": {
+      "frame": {
+        "x": 881,
+        "y": 1105,
+        "w": 110,
+        "h": 110
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 110,
+        "h": 110
+      },
+      "sourceSize": {
+        "w": 110,
+        "h": 110
+      }
+    },
+    "CardBack.psd": {
+      "frame": {
+        "x": 3,
+        "y": 731,
+        "w": 201,
+        "h": 290
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 201,
+        "h": 290
+      },
+      "sourceSize": {
+        "w": 201,
+        "h": 290
+      }
+    },
+    "CardBlank.psd": {
+      "frame": {
+        "x": 3,
+        "y": 403,
+        "w": 232,
+        "h": 324
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 232,
+        "h": 324
+      },
+      "sourceSize": {
+        "w": 232,
+        "h": 324
+      }
+    },
+    "Cell_E.psd": {
+      "frame": {
+        "x": 926,
+        "y": 380,
+        "w": 43,
+        "h": 113
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 43,
+        "h": 113
+      },
+      "sourceSize": {
+        "w": 43,
+        "h": 113
+      }
+    },
+    "Cell_F.psd": {
+      "frame": {
+        "x": 926,
+        "y": 497,
+        "w": 43,
+        "h": 113
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 43,
+        "h": 113
+      },
+      "sourceSize": {
+        "w": 43,
+        "h": 113
+      }
+    },
+    "Cell_R.psd": {
+      "frame": {
+        "x": 915,
+        "y": 1493,
+        "w": 62,
+        "h": 113
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 62,
+        "h": 113
+      },
+      "sourceSize": {
+        "w": 62,
+        "h": 113
+      }
+    },
+    "CheckBox_Off.psd": {
+      "frame": {
+        "x": 850,
+        "y": 1321,
+        "w": 67,
+        "h": 66
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 67,
+        "h": 66
+      },
+      "sourceSize": {
+        "w": 67,
+        "h": 66
+      }
+    },
+    "CheckBox_On.psd": {
+      "frame": {
+        "x": 902,
+        "y": 309,
+        "w": 67,
+        "h": 67
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "sourceSize": {
+        "w": 67,
+        "h": 67
+      }
+    },
+    "HomeCell_A.psd": {
+      "frame": {
+        "x": 239,
+        "y": 403,
+        "w": 194,
+        "h": 279
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 194,
+        "h": 279
+      },
+      "sourceSize": {
+        "w": 194,
+        "h": 279
+      }
+    },
+    "JofC.psd": {
+      "frame": {
+        "x": 3,
+        "y": 1308,
+        "w": 159,
+        "h": 260
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 159,
+        "h": 260
+      },
+      "sourceSize": {
+        "w": 159,
+        "h": 260
+      }
+    },
+    "JofD.psd": {
+      "frame": {
+        "x": 600,
+        "y": 403,
+        "w": 159,
+        "h": 260
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 159,
+        "h": 260
+      },
+      "sourceSize": {
+        "w": 159,
+        "h": 260
+      }
+    },
+    "JofH.psd": {
+      "frame": {
+        "x": 763,
+        "y": 403,
+        "w": 159,
+        "h": 260
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 159,
+        "h": 260
+      },
+      "sourceSize": {
+        "w": 159,
+        "h": 260
+      }
+    },
+    "JofS.psd": {
+      "frame": {
+        "x": 166,
+        "y": 1308,
+        "w": 159,
+        "h": 260
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 159,
+        "h": 260
+      },
+      "sourceSize": {
+        "w": 159,
+        "h": 260
+      }
+    },
+    "KofC.psd": {
+      "frame": {
+        "x": 208,
+        "y": 731,
+        "w": 159,
+        "h": 260
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 159,
+        "h": 260
+      },
+      "sourceSize": {
+        "w": 159,
+        "h": 260
+      }
+    },
+    "KofD.psd": {
+      "frame": {
+        "x": 437,
+        "y": 403,
+        "w": 159,
+        "h": 262
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 159,
+        "h": 262
+      },
+      "sourceSize": {
+        "w": 159,
+        "h": 262
+      }
+    },
+    "KofH.psd": {
+      "frame": {
+        "x": 371,
+        "y": 686,
+        "w": 159,
+        "h": 260
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 159,
+        "h": 260
+      },
+      "sourceSize": {
+        "w": 159,
+        "h": 260
+      }
+    },
+    "KofS.psd": {
+      "frame": {
+        "x": 534,
+        "y": 669,
+        "w": 159,
+        "h": 260
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 159,
+        "h": 260
+      },
+      "sourceSize": {
+        "w": 159,
+        "h": 260
+      }
+    },
+    "LabelsBlack.psd": {
+      "frame": {
+        "x": 3,
+        "y": 1572,
+        "w": 261,
+        "h": 30
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 261,
+        "h": 30
+      },
+      "sourceSize": {
+        "w": 261,
+        "h": 30
+      }
+    },
+    "LabelsRed.psd": {
+      "frame": {
+        "x": 371,
+        "y": 950,
+        "w": 261,
+        "h": 30
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 261,
+        "h": 30
+      },
+      "sourceSize": {
+        "w": 261,
+        "h": 30
+      }
+    },
+    "QoC.psd": {
+      "frame": {
+        "x": 201,
+        "y": 1025,
+        "w": 158,
+        "h": 260
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 158,
+        "h": 260
+      },
+      "sourceSize": {
+        "w": 158,
+        "h": 260
+      }
+    },
+    "QofD.psd": {
+      "frame": {
+        "x": 697,
+        "y": 667,
+        "w": 159,
+        "h": 260
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 159,
+        "h": 260
+      },
+      "sourceSize": {
+        "w": 159,
+        "h": 260
+      }
+    },
+    "QofH.psd": {
+      "frame": {
+        "x": 329,
+        "y": 1289,
+        "w": 159,
+        "h": 260
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 159,
+        "h": 260
+      },
+      "sourceSize": {
+        "w": 159,
+        "h": 260
+      }
+    },
+    "QofS.psd": {
+      "frame": {
+        "x": 363,
+        "y": 995,
+        "w": 159,
+        "h": 260
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 159,
+        "h": 260
+      },
+      "sourceSize": {
+        "w": 159,
+        "h": 260
+      }
+    },
+    "ResetDeck.psd": {
+      "frame": {
+        "x": 526,
+        "y": 1148,
+        "w": 115,
+        "h": 93
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 115,
+        "h": 93
+      },
+      "sourceSize": {
+        "w": 115,
+        "h": 93
+      }
+    },
+    "ScrollLeft.psd": {
+      "frame": {
+        "x": 860,
+        "y": 667,
+        "w": 126,
+        "h": 230
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 126,
+        "h": 230
+      },
+      "sourceSize": {
+        "w": 126,
+        "h": 230
+      }
+    },
+    "ScrollRight.psd": {
+      "frame": {
+        "x": 492,
+        "y": 1259,
+        "w": 126,
+        "h": 230
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 126,
+        "h": 230
+      },
+      "sourceSize": {
+        "w": 126,
+        "h": 230
+      }
+    },
+    "SettingsWindowBottom.psd": {
+      "frame": {
+        "x": 902,
+        "y": 3,
+        "w": 98,
+        "h": 98
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "sourceSize": {
+        "w": 98,
+        "h": 98
+      }
+    },
+    "SettingsWindowBottomLeft.psd": {
+      "frame": {
+        "x": 902,
+        "y": 105,
+        "w": 98,
+        "h": 98
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "sourceSize": {
+        "w": 98,
+        "h": 98
+      }
+    },
+    "SettingsWindowBottomRight.psd": {
+      "frame": {
+        "x": 902,
+        "y": 207,
+        "w": 98,
+        "h": 98
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "sourceSize": {
+        "w": 98,
+        "h": 98
+      }
+    },
+    "SettingsWindowCenter.psd": {
+      "frame": {
+        "x": 711,
+        "y": 1507,
+        "w": 98,
+        "h": 98
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "sourceSize": {
+        "w": 98,
+        "h": 98
+      }
+    },
+    "SettingsWindowLeft.psd": {
+      "frame": {
+        "x": 813,
+        "y": 1507,
+        "w": 98,
+        "h": 98
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "sourceSize": {
+        "w": 98,
+        "h": 98
+      }
+    },
+    "SettingsWindowRight.psd": {
+      "frame": {
+        "x": 895,
+        "y": 901,
+        "w": 98,
+        "h": 98
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "sourceSize": {
+        "w": 98,
+        "h": 98
+      }
+    },
+    "SettingsWindowTop.psd": {
+      "frame": {
+        "x": 895,
+        "y": 1003,
+        "w": 98,
+        "h": 98
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "sourceSize": {
+        "w": 98,
+        "h": 98
+      }
+    },
+    "SettingsWindowTopLeft.psd": {
+      "frame": {
+        "x": 856,
+        "y": 1219,
+        "w": 98,
+        "h": 98
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "sourceSize": {
+        "w": 98,
+        "h": 98
+      }
+    },
+    "SettingsWindowTopRight.psd": {
+      "frame": {
+        "x": 857,
+        "y": 1391,
+        "w": 98,
+        "h": 98
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "sourceSize": {
+        "w": 98,
+        "h": 98
+      }
+    },
+    "SuitsLarge.psd": {
+      "frame": {
+        "x": 645,
+        "y": 1218,
+        "w": 207,
+        "h": 57
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 207,
+        "h": 57
+      },
+      "sourceSize": {
+        "w": 207,
+        "h": 57
+      }
+    },
+    "SuitsSmall.psd": {
+      "frame": {
+        "x": 239,
+        "y": 686,
+        "w": 119,
+        "h": 30
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 119,
+        "h": 30
+      },
+      "sourceSize": {
+        "w": 119,
+        "h": 30
+      }
+    },
+    "URLBlack.psd": {
+      "frame": {
+        "x": 208,
+        "y": 995,
+        "w": 139,
+        "h": 11
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 139,
+        "h": 11
+      },
+      "sourceSize": {
+        "w": 139,
+        "h": 11
+      }
+    },
+    "URLRed.psd": {
+      "frame": {
+        "x": 208,
+        "y": 1010,
+        "w": 139,
+        "h": 11
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 139,
+        "h": 11
+      },
+      "sourceSize": {
+        "w": 139,
+        "h": 11
+      }
+    },
+    "Victory.psd": {
+      "frame": {
+        "x": 3,
+        "y": 3,
+        "w": 895,
+        "h": 396
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 895,
+        "h": 396
+      },
+      "sourceSize": {
+        "w": 895,
+        "h": 396
+      }
+    },
+    "Volume.psd": {
+      "frame": {
+        "x": 622,
+        "y": 1425,
+        "w": 60,
+        "h": 53
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 53
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 53
+      }
+    }
+  },
+  "meta": {
+    "app": "https://www.codeandweb.com/texturepacker",
+    "version": "1.0",
+    "image": "Cards.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 1003,
+      "h": 1609
+    },
+    "scale": "1",
+    "smartupdate": "$TexturePacker:SmartUpdate:61383d54af0bbc524e5fade18b5de076:0b4e5c8073338cae85686aca1de69903:df4bb2b9b616b2885794040298a41d42$"
+  }
+}

@@ -4,7 +4,7 @@
   (memory 1)
   (data (i32.const 0) "abcd")
   (data (i32.const 0xff) "bcde")
-  (!inline $filedata 512 "test.png" (!process "test.js"))
+  (!inline $filedata 512 "card.json" (!process "./spriteSheetData.js"))
   (global $dump (mut i32) (i32.const 0))
 
   (func $loop_test (export "loop_test") (param $n i32)

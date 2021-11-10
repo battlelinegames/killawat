@@ -320,7 +320,9 @@ class Preprocess {
       return;
     }
 
-    let data = fs.readFileSync(fileName, { encoding: "binary" });
+    let data = new Buffer.from(fs.readFileSync(fileName, { encoding: "binary" }));
+
+    console.log(`typeof data: ${typeof data}`);
     if (this.preprocessFunc != null) {
       data = this.preprocessFunc(data);
     }
@@ -328,7 +330,7 @@ class Preprocess {
     let dataString = '';
 
     for (let i = 0; i < data.length; i++) {
-      dataString += '\\' + data[i].charCodeAt(0).toString(16).padStart(2, '0');
+      dataString += '\\' + data[i].toString(16).padStart(2, '0');
     }
 
     newDataTokens.push(
